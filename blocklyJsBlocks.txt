@@ -1,0 +1,863 @@
+
+scope extends expr
+
+ReflectClass(id) extends expr
+ReflectClassMethod(ref,id,paramsFormal) extends expr
+ReflectClassField(ref,id) extends expr
+ReflectClassMethodList(ref)returns array extends expr
+ReflectClassFieldList(ref)returns array extends expr
+ReflectClassMethodCall(methodRef/id , objRef/scope,actualParams/array)//relationship:scope,referencedobj,funcId,actualParams) extends expr
+ReflectClassFieldSet(fieldRef/id , objRef/scope, val) extends expr
+ReflectClassFieldGet( fieldRef/id , objRef/scope ) extends expr
+ReflectClassInstanciate extends ReflectClassMethodCall
+
+LiteralString extends expr
+LiteralNumber extends expr
+LiteralBoolean extends expr
+LiteralNull extends expr
+LiteralArray extends DefineScope
+LiteralObject extends DefineScope (props)
+	LiteralPropName(id)
+	LiteralPropVal extends Literal
+
+DefineScope extends DefineScopeField(Extends,Body)
+	DefineIdentifier(string) // should internally specify/store scope // thisis id
+DefineScopeField(id,annotations,type,modifier) extends expr
+DefineScopeMethod extends DefineScopeField(params,throws,body)
+	DefineParamList extends DefineScope//scope is either array or obj
+
+
+
+//flow ,the next section are control-flow constructs
+if (expr , body , else(body) ) extends expr
+for( init , truthyExpr , iter:expr , body ) extends expr
+while( truthyExpr , body ) extends expr
+do( truthyExpr , body ) extends expr
+switch extends LiteralObject( switch:expr , list of pairs of key:expr , default expr)
+try (body , catchClause(id,body) ,finally(body) )
+return (expr)  extends expr
+throw (expr)  extends expr
+
+
+//expr , the next section is about expressions
+//Expression class, the following code commands/constructs are categorized as expressions, just labeling , no special effect
+typeof/instanceof extends expr
+isNull extends expr
+isReturnOrThrow extends expr
+body /block  // sameas LiteralArray
+
+
+//Arithmetic , next section , each construct takes varArgs
+div/'/' , divInt ,minus/'-' ,plus/'+' , mul/'*' , mod/'%' 
+,bitwiseAnd/'&' , bitwiseOr/'|'  ,bitwiseNot/'~' ,bitwiseXor
+,xor,shiftRight/'>>' ,shiftLeft/'<<' ,rotateRight/'>>>'
+
+
+
+//public static class Relational//and,or,not,eq,ne,lt,le,gt,ge
+
+
+
+/*
+eval
+
+setParam
+ParamList
+LocalThread
+ThreadClass
+Class
+Object
+sync
+async
+await
+Math //like java
+
+Core //classPackage
+	Lang
+		Expr
+			scopes/properties
+				dotNotation
+				assign
+				delete
+				ArrayIndex
+				ArrayLength
+			Typeof/instanceof
+			Math //Arithmetic
+				arithmitic
+					add
+					sub
+					mul
+					div
+					intDiv
+					power
+					log
+					sin
+					cos
+				logical
+					and
+					or
+					not
+				comparison
+					gt
+					lt
+					lte
+					gte
+					neq
+					eq
+				bitwise
+					and
+					or
+					xor
+					not
+					rotateRight
+					rotateLeft
+					shiftLeft
+		Reflect
+			Class
+			Field
+			Method
+			Package
+			Type
+			Section
+			Annotation
+		Literal
+			String
+			Number
+			Boolean
+			Null/undefined
+			Array
+				Item
+			Object
+				Property
+					Id
+					Expr
+		Define
+			Scope
+			Field
+			Method
+			Id
+		ControlFlow
+			If
+			For
+			While
+			Do
+			Switch
+			Try
+			Return
+			Throw
+			Continue
+			Break
+		Scope
+			This
+			Super/prototype
+	GraphicReflection
+		IDE
+			Workspace
+			Toolkit
+				Sections
+					Annotation
+					Responsibilities
+					View
+			Template
+		Defaults
+			Workspace
+			Toolkit
+	BlocklyFactory
+		blockFactory
+		?
+
+io
+	fs
+	db
+		mysql
+net
+	rest
+	socket
+npmLib
+	express
+threeD
+canvas
+dom
+	html
+	document
+	window
+		location
+	angularjs
+screen
+system
+fsm
+	Thread
+		CallStack
+		CurrentThread
+		await
+		async
+		sync
+		
+*/
+
+
+
+/**{code:'&&' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="",names="&& and") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{var o=json.params;if(o instanceof Array)
+{List a=(List)o;if(a.size()>1)
+{o=eval(a.get(0),scope);if( isTrue(o) )
+{boolean b=true;for(int i=1;b&&i<a.size();i++)
+	{	o=eval(a.get(i),scope);
+		b=b&&isTrue(o);
+	}return b;}}}return false;}
+
+/**{code:'||' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="",names="|| or") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("params");boolean b=false;
+ if(o!=null&&o instanceof List)
+{List a=(List)o;if(a.size()>1)
+{o=eval(a.get(0),scope);b=isTrue(o);
+{for(int i=1;!b&&i<a.size();i++)
+{	o=eval(a.get(i),scope);
+	b=isTrue(o);
+}}}}return b;}
+
+/**{code:'isTrue' , istrue:<code> }
+ * TODO: write test cases */
+@code(doc="/**{code:'isTrue' , istrue:<code> }*/",names="isTrue") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("istrue");o=eval(o,scope);return isTrue(o);}
+
+/**{code:'not' , not:<code> }
+ * TODO: write test cases */
+@code(doc="",names="not !") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("not");o=eval(o,scope);return !isTrue(o);}
+
+/**{code:'==' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="/**{code:'==' ,params:[<code-expr>,...]}*/",names="== eq equals") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("params"),p=null;
+if(o!=null&&o instanceof List)
+{List a=(List)o;if(a.size()>1)
+{o=eval(a.get(0),scope);
+ p=eval(a.get(1),scope);
+{boolean b=o==p||(o!=null&&o.equals(p));
+for(int i=2;b&&i<a.size();i++)
+{	p=eval(a.get(i),scope);
+	b=o==p||(o!=null&&o.equals(p));
+}return b;}}}return false;}
+
+/**{code:'!=' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="",names="!= <> notEqual") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{return !isTrue(eq(json,scope));}
+
+/**{code:'<' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="/**{code:'<' ,params:[<code-expr>,...]}*/",names="< lt") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("params"),p=null;
+if(o!=null&&o instanceof List)
+{List a=(List)o;if(a.size()>1)
+{o=eval(a.get(0),scope);
+ p=eval(a.get(1),scope);
+{double d=o instanceof Number?((Number)o).doubleValue():Double.NaN
+ ,e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+	boolean b= d!=Double.NaN && d<e ;
+	for(int i=2;b&&i<a.size();i++)
+	{	d=e;p=eval(a.get(i),scope);
+		e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		b= e!=Double.NaN && d<e ;
+	}return b;}}}return false;}
+
+/**{code:'<=' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="/**{code:'<=' ,params:[<code-expr>,...]}*/",names="<= le") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("params"),p=null;
+if(o!=null&&o instanceof List)
+{List a=(List)o;if(a.size()>1)
+{o=eval(a.get(0),scope);
+ p=eval(a.get(1),scope);
+{double d=o instanceof Number?((Number)o).doubleValue():Double.NaN
+	 ,e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		boolean b= d!=Double.NaN && d<=e ;
+	for(int i=2;b&&i<a.size();i++)
+	{	d=e;p=eval(a.get(i),scope);
+		e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		b= e!=Double.NaN && d<=e ;
+	}return b;}}}return false;}
+
+/**{code:'>' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="/**{code:'>' ,params:[<code-expr>,...]}*/",names="> gt") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("params"),p=null;
+	if(o!=null&&o instanceof List)
+	{List a=(List)o;if(a.size()>1)
+	{o=eval(a.get(0),scope);
+	 p=eval(a.get(1),scope);
+	{double d=o instanceof Number?((Number)o).doubleValue():Double.NaN
+	 ,e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		boolean b= d!=Double.NaN && d>e ;
+	for(int i=2;b&&i<a.size();i++)
+	{	d=e;p=eval(a.get(i),scope);
+		e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		b= e!=Double.NaN && d>e ;
+	}return b;}}}return false;}
+
+/**{code:'>=' ,params:[<code-expr>,...]}
+ * TODO: write test cases */
+@code(doc="/**{code:'>=' ,params:[<code-expr>,...]}*/",names=">= ge") public static Object 
+codeJson['']=codeJson['']=function codeJson(json,scope)
+{Object o=json.get("params"),p=null;
+	if(o!=null&&o instanceof List)
+	{List a=(List)o;if(a.size()>1)
+	{o=eval(a.get(0),scope);
+	 p=eval(a.get(1),scope);
+	{double d=o instanceof Number?((Number)o).doubleValue():Double.NaN
+	 ,e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		boolean b= d!=Double.NaN && d>=e ;
+	for(int i=2;b&&i<a.size();i++)
+	{	d=e;p=eval(a.get(i),scope);
+		e=p instanceof Number?((Number)p).doubleValue():Double.NaN;
+		b= e!=Double.NaN && d>=e ;
+	}return b;}}}return false;}
+
+
+//end of Relational
+
+
+//public enum Browser{document,window,css,jquery;}
+
+//@code(doc="",names="? cond ternary") public static Object Conditional(Map json,List<Map>scope){return null;}
+//enum Json{string,number,bool,Null,obj,array}
+
+
+/**this is for JSP, not implemented in this test-project, LT stands for LocalThread*/
+//public enum LT{r,s,a,user,out,flushout,log,sId,prm,var,codeCallStackFrames;
+
+//public static class CallStackFrame{//def,/**currentInstructionIndex in def*/ii,/**scope.get,scope.put,scope.size,scope.keys*/scope,prevFrm;}
+//end of LT
+
+/**this class depends on LT, thats why most of the codes are not implemented*/
+//public static class App{//db,UrlFileRestWebDav,java,pages,runnable,tasks,calendar,strategy,timeline,slot,users,tracks;
+
+/**TODO: write implementation
+ * TODO: write test cases * /
+codeJson['']=codeJson['']=function codeJson(json,scope){}//@code(doc="")public static Object runnable(Map json,List<Map>scope){return null;}
+
+/**this class depends on LT, thats why the codes are not implemented* /
+public enum DB{ showDatabases,useDatabase
+	,showTables,useTable
+	,schemaDB,schemaTbl
+	,P,R,X,Conn,close
+	,q1str,q1int,q1num,q1col,q1row
+	,qObj,query;
+	enum R{nextJson,next,col,colsJson,skipColsRegEx}
+	enum X{delete,update,replace,insert}
+}//DB
+
+/**this class depends on LT, thats why the codes are not implemented* /
+public enum File//UrlFileRestWebDav
+{rootUrl
+	,_class,contentType
+	,reader,writer
+	,inputstream,outputstream
+	,str,bytes,b64
+	,dir,mv,cp,del,ext
+	,writeStr,wSub,subStr
+	,offset,indexOf,length,lm,list;
+	@code(doc="")public static Object file(Map json,List<Map>scope){return null;}
+}//enum file
+
+/**this class depends on LT, thats why the codes are not implemented* /
+public static class java{//class_,method,field,constructor,array;
+
+/**can do any-one of the following:
+	* get annotations
+	* get annotation from a name
+	* forName
+	* listMethods returns array
+	* listFields
+	* listConstructors
+	* getType
+	* list generics
+	* TODO: write implementation
+	* TODO: write test cases 
+* /
+@code(doc="",names="java.class")public static Object class_(Map json,List<Map>scope){return null;}
+
+
+/**can do any-one of the following:
+ * get annotations
+ * get annotation from a name
+ * TODO: write implementation
+ * TODO: write test cases 
+ * * /
+@code(doc="",names="java.constructor")public static Object constructor(Map json,List<Map>scope){return null;}
+
+
+/**can do any-one of the following:
+ * get annotations
+ * get annotation from a name
+ * invoke
+ * listParams
+ * getReturnType
+ * listExceptions
+ * name
+ * list generics
+ * TODO: write implementation
+ * TODO: write test cases 
+* /
+@code(doc="",names="java.method")public static Object method(Map json,List<Map>scope){return null;}
+
+
+/**can do any-one of the following:
+ * get annotations
+ * get annotation from a name
+ * get value
+ * set value
+ * get type
+ * get name
+ * list generics
+ * TODO: write implementation
+ * TODO: write test cases 
+ * * /
+@code(doc="",names="java.field")public static Object field(Map json,List<Map>scope){return null;}
+
+
+/**can do any-one of the following:
+ * get annotations
+ * get type
+ * get length
+ * get element
+ * set element
+ * instantiate
+ * list generics
+ * TODO: write implementation
+ * TODO: write test cases 
+ * * /
+@code(doc="",names="java.array")public static Object array(Map json,List<Map>scope){return null;}
+}//java
+
+
+/**http-request-url:
+	?op=code.(set|get|json)&id=code.expr.app.pages.<id>.tags.<id>.<prop>&value=<json|code>
+* /public enum pages{tags,code
+}//pages
+
+
+}//App
+
+
+public static class Util
+{
+/**String.valueOf, may take as input a string or an array or a array-of-bytes or stream or reader
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object str(Map json,List<Map>scope){return null;}
+
+/** return java array, {code:"code.expr.util.array" , type:<code-javaclass> , length:<code-expr-int>}
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object array(Map json,List<Map>scope){return null;}
+
+/**java.lang.String.split(char c) returns String[] ; or should operate on array-of-bytes  or array
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object split(Map json,List<Map>scope){return null;}
+
+/** {code:"code.expr.util.regex" , regex:<str> , obj:<code-expr>} should return array 
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object regex(Map json,List<Map>scope){return null;}
+
+/** {code:"code.expr.util.sub" , index:<code-int> , length:<code-int> } get substring/array at 'index' and 'length'
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object sub(Map json,List<Map>scope){return null;}
+
+/**TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object indexOf(Map json,List<Map>scope){return null;}
+//,startsWith
+
+/**(offset,len,replace:<one element, even if its an array or map>) replaces the range with <replace>
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object splice(Map json,List<Map>scope){return null;}
+
+/**{src:<ref>,srcIndex:<int ; if ommitted defaults to 0>,srcLength:<int ; if ommitted defaults to 1>,dst:<ref>,dstIndex:<int ; if ommitted defaults to 0>,dstLength:<int ;remove elements from dst ,if ommitted defaults to 0>} for the case of arrays, or in case of maps props:[<list of str name of props>...]
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object copy(Map json,List<Map>scope){return null;}
+
+/** {code:"code.expr.util.map" map:[ [<code-bool>,<code>] ... ] } returns a new obj/map , almost like 'if' but doesnt stop with the 1st true, will do all the list
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object map(Map json,List<Map>scope){return null;}
+
+/** str to int/long or double or date or color or json, depending on the defaultValue, the defval is retuned when the parse fails, a json-parser is used when defval is null or omitted
+ * TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object parse(Map json,List<Map>scope){return null;}
+
+public static Object parse(Object obj,Object defval)
+{if(obj!=null)
+{if(defval instanceof Number){}
+}return defval;}
+
+/**TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object md3(Map json,List<Map>scope){return null;}
+
+/**TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object b64(Map json,List<Map>scope){return null;}
+
+/**TODO: write implementation
+ * TODO: write test cases * /
+@code(doc="")public static Object uuid(Map json,List<Map>scope){return null;}
+
+}//Util
+
+
+public static class NameSpace{
+
+/**if field is false then return the object that is refeered/mentioned to have the key-id
+ * 
+ * this method has three aspects:
+ * 1- consider if id is cascaded
+ * 2- consider four types of obj:Map ,List ,Array or javaObject
+ * 3- consider the prototype-chain and 'this' 
+ * TODO: test scope, with this
+ * TODO: test scope, with prototype
+ * TODO: test id, dot-notation
+ * TODO: test id, List
+ * TODO: test scope, no id match
+ * TODO: test scope, id match under stacked scope
+ * TODO: consider when !get && id is "prototype", in case obj doesnt have proto then no problem, but when there is a prototype, will not be set on obj , but propagated to proto
+ * * /
+public static Object lookup(Object obj,Object id,boolean field){return lookup(obj, id, field, true, null);}
+public static Object lookup(Object obj,Object id,boolean field,boolean get,Object set)
+{boolean 
+	 bList=id instanceof List
+	,bDot=id instanceof String 
+		&& ((String)id).indexOf(".")!=-1
+	,bArray=!bList&& !bDot && id!=null
+		&&id.getClass().isArray();
+ if(bList||bArray||bDot)
+	return lookup(obj,id,field,bDot?0:bArray?1:2,get,set);
+ if(obj instanceof Map)
+ {	Map scope=(Map)obj;Object x=scope.get(id);
+	if(x==null)
+	{	obj=scope.get("prototype");
+		//if(obj!=null&&obj instanceof Map)obj=lookupRefeered((Map)obj,id,field);
+		if(obj!=null)obj=x=lookup(obj,id,field,get,set);
+		else if(!get)scope.put(id, x=set);
+	}else if(!get)scope.put(id, x=set);
+	return field?x:obj;}
+ if(obj instanceof List)
+ {	List scope=(List)obj;
+	int i=((Number)Expr.Util.parse(id, -1)).intValue();
+ 	Object x=obj!=null&&i>=0?scope.get(i):null;
+	if(x==null)obj =null;
+	if(!get);
+	return field?x:obj;}
+ if(obj instanceof Object[])
+ {	int i=((Number)Expr.Util.parse(id, -1)).intValue();
+ 	Object x=i>=0?Array.get(obj,i):null;
+	if(x==null)obj =null;
+	return field?x:obj;}
+ //at this point , the obj will be treated with java.lang.reflect,1- id as field , then 2-id as method , then 3-id as annotation or maybe-not,,,ect
+ if(obj!=null&&id!=null)
+ {Class c=obj.getClass();String sId=id.toString();
+// if(id.equals("super"))return c.getSuperclass();
+	/*if(sId.startsWith("(class)"))
+	{	c.getAnnotations();	c.getCanonicalName();	c.getClass();
+		/** Returns an array containing Class objects representing
+		 *  all the public classes and interfaces that are members
+		 *   of the class represented by this Class object. This 
+		 *   includes public class and interface members inherited
+		 *   from superclasses and public class and interface 
+		 *   members declared by the class. This method returns an
+		 *   array of length 0 if this Class object has no public 
+		 *   member classes or interfaces. This method also returns
+		 *   an array of length 0 if this Class object represents a
+		 *   primitive type, an array class, or void.
+		 * /c.getClasses();
+	c.getClassLoader();	c.getComponentType();	 c.getConstructors();
+	c.getDeclaringClass();//the declaring class for this class
+		 /**Returns the immediately enclosing class of the underlying class.
+		  *  If the underlying class is a top level class this method returns null.
+		  *Since:1.5* /c.getEnclosingClass();
+	/**Returns the elements of this enum class or null if this Class object does not represent an enum type.
+		Returns:an array containing the values comprising the enum
+		 class represented by this Class object in the order they're
+		 declared, or null if this Class object does not represent an enum type
+		Since:1.5* /c.getEnumConstants();
+	c.getFields();	c.getGenericInterfaces();
+	/**Returns the Type representing the direct superclass of the entity (class, interface, primitive type or void) represented by this Class.
+		If the superclass is a parameterized type, the Type object returned must accurately reflect the actual type parameters used in the source code. The parameterized type representing the superclass is created if it had not been created before. See the declaration of ParameterizedType for the semantics of the creation process for parameterized types. If this Class represents either the Object class, an interface, a primitive type, or void, then null is returned. If this object represents an array class then the Class object representing the Object class is returned.
+		Returns:the superclass of the class represented by this object
+		Throws:GenericSignatureFormatError - if the generic class signature does not conform to the format specified in the Java Virtual Machine Specification, 3rd edition
+		TypeNotPresentException - if the generic superclass refers to a non-existent type declaration
+		MalformedParameterizedTypeException - if the generic superclass refers to a parameterized type that cannot be instantiated for any reason
+		Since:1.5* /c.getGenericSuperclass();
+	c.getInterfaces();c.getMethods();c.getModifiers();c.getName();c.getPackage();
+	c.getProtectionDomain();c.getResource("");c.getResourceAsStream("");c.getSigners();
+	c.getSimpleName();c.getSuperclass();c.getTypeParameters();c.isAnnotation();
+	//c.isAnnotationPresent(Class annotationClass)
+	c.isAnonymousClass();c.isArray();//c.isAssignableFrom(Class cls)
+	c.isEnum();//c.isInstance(Object obj)
+	c.isInterface();c.isLocalClass();c.isMemberClass();c.isPrimitive();c.isSynthetic();c.newInstance();
+	}* /
+ try{Field f=c.getField(sId);
+	if(f!=null)return field?f:f.get(obj);}catch(Exception ex){}
+	{Method m,a[]=c.getMethods();//Declared//id.toString());
+	for(int i=0,n=a.length;i<n;i++)
+	{m=a[i];if(id.equals(m.getName()))return m;}}
+	{Annotation m,a[]=c.getAnnotations();
+	for(int i=0,n=a.length;i<n;i++)
+	{m=a[i];if(id.equals(m.getClass().getSimpleName()))return m;}}
+ }return null;}
+
+/**this method goes through the cascaded id
+ * , there are three types of cascaded id:
+ * typ=0 : dot-notation
+ * typ=1 : array
+ * typ=2 : List* /
+public static Object lookup
+(Object obj,Object id,boolean field,int typ,boolean get,Object set)
+{switch(typ)
+{case 0:{//bDot
+	String[]a=((String)id).split(".");
+	id=a;typ=1;}//return lookupRefeered(scope, a,field, 1);
+ /*case 1:{//bArray
+	Object x=obj,a[]=(Object[])id;
+	for(int i=0,n=a.length;x!=null&&i<n;i++,obj=x)
+	 if(i<n-1||field)x=lookupRefeered(obj, a[i],field);
+	return x==null?x:field?x:obj;}
+ case 2:{//bList
+	Object x=obj;List a=(List)id;
+	for(int i=0,n=a.size();x!=null&&i<n;i++,obj=x)
+	 if(i<n-1||field)x=lookupRefeered(obj, a.get(i),field);
+	return x==null?x:field?x:obj;}* /
+ default:Object x=obj;
+	for(int i=0,n=typ==1
+		?((Object[])id).length
+		:((List)id).size() 
+		; x!=null&&i<n ;i++,obj=x)
+	 if(i<n-1||field)x=lookup(
+		obj,typ==1?((Object[])id)[i]
+		:((List)id).get(i),i<n-1||field,get,set);
+	return x==null?x:field?x:obj;
+}}//return null;}
+
+/**check key, then recursively the prototype-chain* /
+public static Object lookupObj(Object id,Map scope)
+{	Object o=scope,x=o!=null?scope.get(id):null;
+	if(x==null&&o!=null)
+	{	o=scope.get("prototype");
+		if(o!=null&&o instanceof Map)
+		o=lookupObj(id,(Map)o);
+	}else if(x==null)o=null;return o;}* /
+
+public static Object lookupStacked(Object id,Map json,List<Map>scope,Object v)
+{if(scope==null)return null;Object o=null;if(v==null)v=undefined;
+	int i=-1,n=scope.size();while(o==null&&++i<n)
+		o=lookupRefeered(scope.get(i), id, false, false, v);//lookup(id,scope.get(i),v);
+	if(o==null&&v!=null)
+		scope.get(0).put(id, v);
+	return v;}//lookup* /
+
+public static Object lookupStacked(Object obj,Object id){return lookupStacked(obj,id,true,null);}
+public static Object lookupStacked(Object obj,Object id,boolean get,Object set)
+{if(obj==null)return null;Object o=null;
+if(obj instanceof List<?>)
+{List<Map>scope=(List<Map>)obj;
+	int i=-1,n=scope.size();
+	while(o==null&&++i<n)
+		o=lookup(scope.get(i), id, true,get,set);//(id,scope.get(i));
+	if(o==null)
+	{	Map m=scope.get(n-1);
+		o=m!=null?m.get("this"):null;
+		//if(o!=null&&o instanceof Map)
+		o=lookup(m, id, true,get,set);//(id,m);
+		//else o=null;
+	}}else
+{o=lookup(obj, id, true,get,set);
+if(o==null)
+{	Object t=lookup(obj, "this", true,get,set);
+	if(t!=null)o=lookup(t, id, true,get,set);
+}
+}return o;}//lookupStacked
+
+/** {code:"code.expr.util.<put or set>" , <'index' or 'key'>:<code-expr> , value:<code-expr>} 
+ * TODO: write test cases* /
+@code(doc="",names="= := set") public static Object set(Map json,List<Map>scope)
+{Object o=prp(json,"obj","this"),n=prp(json,"." 
+	, "get" , "id" , "name" , "key","index","field" 
+	, "member" , "prop" ,"property","ref")
+	,v=prp(json,"value","val","v","set","put","=",":=");
+	if(n!=null&&v!=null)
+	{if(o!=null)o=eval(o,scope);
+	 n=eval(n,scope);
+	 v=eval(v,scope);
+	 v=lookupStacked(o!=null?scope:o,n,false,v);
+	}else v=null;
+	return v;}//n==null?n:
+
+/** {code:"<'.' or 'index' or 'key' or 'get' or 'prop' or 'val' or 'value' or 'name' or 'id' or 'field' or 'member' or 'property'>"
+ *  , <'.' or 'index' or 'key' or 'get' or 'prop' or 'ref' or 'name' or 'id' or 'field' or 'member' or 'property'>
+ *  :
+ *  <code-evalsTo str or java.lang.reflect.Field or str(with sequence of dots e.g. "employee.address.area") or array(as in a path, e.g.['employee','address','area')>
+ *  , <optional:if omitted defaults to lookupNSpace><'this' or 'obj'>:<code-evalsTo Map/jsonObj or java-object >} 
+ *  TODO: write test cases* /
+@code(doc="",names=". get id name key index field member prop property") public static Object 
+get(Map json,List<Map>scope)
+{Object o=prp(json,"obj","this"),n=prp(json,"." 
+, "get" , "id" , "name" , "key","index","field" 
+, "member" , "prop" ,"property","ref");
+return n==null?n:lookupStacked(o!=null?scope:o,n);
+	/*if(n!=null)
+	{	if(o==null)
+			return lookup(n,json,scope,);
+		if(o instanceof Map)
+			return lookup(n,(Map)o);
+	}return null;* /}
+
+ static Object prp(Map m,Object...p){for(Object n:p){Object x=m.get(n);if(x!=null)return x;}return null;}
+
+}//NameSpace
+
+public static class Function{
+/**function:
+ * declare
+ * call
+ * introspect
+	* getname
+	* listParams
+	* return type
+	* list exceptions
+	* isSync
+	* this //function
+	* 
+declare:
+	{code:'function' ,<optional>name:<str funcName or code-evalsTo-str> 
+		,<optional>params:[ <strVarName or code-str or [str,type,<optional defaultValue>] or {name:<str>,type:<code-evalsTo type>,<optional>default:<code-const>}>,... ]
+		,<optional>return:<type>
+		,<optional>isSync:<bool>
+		,body:<array-of-code or code>
+	}
+	TODO: write test cases
+ * * /
+@code(doc="")public static Object function(Map json,List<Map>scope)
+{return NameSpace.lookupStacked(scope,eval(NameSpace.prp(json
+	,"name","id","function","func","defunc"
+	,"def","define","declare","method","procedure"
+	,"key","routine","subroutine")
+	,scope), false, json);}
+
+/**TODO: write test cases* /
+@code(doc="",names="var") public static Object functionLocalVar(Map json,List<Map>scope)
+{	Object n=json.get("var"),o=NameSpace.lookupStacked(scope,n);
+	o=json.get("value");
+	o=eval(o,scope);
+	if(o==null)o=undefined;
+	scope.get(0).put(n,o);
+	return o;}
+
+/**call:
+	{code:'call' ,fun:<code evalsTo ref to function , or code-evalsTo-str name in obj> 
+		,<optional>params:<
+			array: elems: code-evalsTo actual values-of-param-passing 
+		  or obj >
+		,<optional>obj:<code-evalsTo-ref of scope>
+	}
+	TODO: write test cases
+ * * /
+@code(doc="",names="call invoke invocation sub")public static Object 
+call(Map json,List<Map>stack)
+{	//1- getting a ref to obj
+	/**Objects for internal workings* /
+	Object obj=NameSpace.lookupStacked(stack, NameSpace.prp(json,"obj","ref"))
+
+	//2- getting a ref to the method
+	, f=NameSpace.prp(json,"fun","func","name","function","call")
+	,/**reference to the declaration of the function* /
+	 ref=eval(f,stack)
+	,/**p is actual parameter values* /actual
+
+	,/**the json-property value* /
+	 params=NameSpace.prp(json
+		,"params","p","P","PARAMS","Params","parameter"
+		,"parameters","PARAM","PRM","PRMS","prm","prms"
+		,"a","A","args","Args","ARGS","arguments","Arguments");
+
+	ref=ref instanceof String||ref instanceof List
+		? NameSpace.lookupStacked(obj!=null?obj:stack,ref):ref;
+	if(ref==null&&stack!=null)
+		ref=NameSpace.lookupStacked(stack, f);
+	if(ref==null)return null;
+
+	//3- constructing a frame on the callStack a scope and parameter passing
+	List<Map>s2=new LinkedList<Map>();
+	actual=eval(params,stack);
+	if(obj!=null&&!(obj instanceof Map))
+	//here its assumed its a java object, so, java-reflection is put to comition 
+	{	if(params==null
+		||(params instanceof List&&((List)params).size()==0)
+		||(params instanceof Map && ((Map)params).size()==0)
+		){}
+		//TODO: java.lang.reflect.Method fetching
+		//TODO: preparing params
+		//TODO: java.lang.reflect.Method invocation
+	}else{Map scope=new HashMap();
+	if(actual!=null)scope.put("arguments", actual);
+	if(actual instanceof List)
+	{	List pass=(List)actual;
+		//TODO: get formal parameters and set the names to the 'scope'
+		Object formal=NameSpace.prp((Map)ref, "params");
+		if(formal instanceof List)
+		{List fl=(List)formal;
+		 for(int i=0,n=fl.size();i<n;i++)
+		 {Object fo=fl.get(i),p=eval(pass.get(i),stack);
+			if(fo instanceof String)
+				scope.put(fo, p);
+			if(fo instanceof List)//TODO: implement type constraint check
+				scope.put(((List)fo).get(0),p );//TODO: check actual if missing then set formal-default
+			if(fo instanceof Map)//TODO: implement type constraint check
+				scope.put(((Map)fo).get("name"), p);//TODO: check actual if missing then set formal-default
+		}}
+		else if(formal instanceof Map){}//TODO: write implementation when formal-parameters are Map
+	}else if(actual instanceof Map)
+	{	//TODO: set the names(from params) in the 'scope'
+		Map m=(Map)actual;
+		for(Object k:m.keySet())
+			scope.put(k, m.get(k));//TODO: write implemetation to check formal(string,list,map) formal-type-constraint & formal-default
+	}
+	if(obj!=null)scope.put("this", obj);//TODO: design/concept the outter scope of formal-function , in other words , function-closure 
+	s2.add(scope);
+	//4- invocation, stepping through the instructions-list , checking "return" , exception handling
+	obj=eval(((Map)ref).get("body"),s2);
+	//5- passing return value
+	//6- releasing the frame from the callStack	, not going to be implemented
+	return obj;
+	}
+	return null;}
+
+
+/**{code:'new' ,constructor:<code-expr> ,<optional>params:<list or map-of-params or code>}
+ * TODO: write implementation
+ * TODO: write test cases* /
+@code(doc="/**{code:'instanceof' ,obj:<code-expr> ,type:<code-expr-type>}* /") public static Object 
+New(Map json,List<Map>scope){return false;}
+
+}//Function
+
+*/
