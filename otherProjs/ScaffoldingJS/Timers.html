@@ -1,0 +1,71 @@
+<script>
+app={nodes:[]
+,onload:window.onload=function appOnload(){
+	var a=app.getElementsByAttrib(document.body,/ng-/)
+	
+}//start
+,processOnloadNg:function(n){}
+,processNg:function(n){
+	
+}
+,getElementsByAttrib:function getElementsByAttrib(t,aNm,aVal,a){
+	function is(f,v){//if(f instanceof NamedNodeMap)
+		return f instanceof RegExp?f.test(v):f==v;}
+	var atrs=t&&t.attributes,atr=atrs&&atrs[aNm]
+	if(aNm instanceof RegExp)
+	{atr=0;for(var i=0;i<atrs.length &&!atr;i++)
+		if(aNm.test((atr=atrs.item(i)).name))
+		{	var v=atr.value
+			if(is(v,aVal))
+			{	if(!a)a=[]
+				a.push(t)
+			}else atr
+		}else
+			atr=0
+	}else if(!aVal||is(aVal,atr)){
+		if(!a)a=[]
+		a.push(t)
+	}
+	if(t.firstChild)
+		a=getElementsByAttrib(t.firstChild ,aNm,aVal,a);
+	if(t.nextSibling)
+		a=getElementsByAttrib(t.nextSibling,aNm,aVal,a);
+	return a;
+}//getElementsByAttrib
+,getAttribs:function getAttribs(t,aNm,aVal,a){
+	function is(f,v){//if(f instanceof NamedNodeMap)
+		return f instanceof RegExp?f.test(v):f==v;}
+	var atrs=t&&t.attributes,atr;//=atrs&&atrs[aNm]
+	if(aNm instanceof RegExp)
+	{for(var i=0;i<atrs.length ;i++)
+		if(aNm.test((atr=atrs.item(i)).name))
+		{	var v=atr.value
+			if(!aVal || is(aVal,v))
+			{	if(!a)a=[]
+				a.push(atr)
+			}
+		}
+	}else if(!aVal||is(aVal,atr)){
+		if(!a)a=[]
+		a.push(t)
+	}
+	return a;
+}//getAttribs
+}//app
+</script>
+
+<div ng-template="timer" ><!-- binds to "scope" object, where every ng-model will get values from a property of scope with the same name in the value of the attrib-model -->
+	<script ng-scope>
+	{scope:'yes'}</script>
+
+	<select ng-model="trgtTyp">
+		<option>toFuture</option>
+		<option>fromNow</option>
+		<option>Delete</option>
+	</select>
+	<input ng-model="trgt"/>
+	<div ng-model="time"></div>
+</div>
+
+<button onclick="newTimer()">new Timer</button>
+
