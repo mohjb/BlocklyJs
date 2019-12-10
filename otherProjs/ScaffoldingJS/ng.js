@@ -1,71 +1,122 @@
 
-<script>
-//generate window.open
-db={ipStart:100,ipEnd:245,ipPrefix:'192.168.1.',w:[]
-	,url:{h:'http://',config:'/cgi-bin/minerConfiguration.cgi'
-		,net:'/network.html'
-		,stat:''
-	}
-	,pools:{
-		ant_pool1url:'stratum+tcp://btc.viabtc.com:3333'
-		,ant_pool2url:'stratum+tcp://sha256.eu.nicehash.com:3334'
-		,ant_pool3url:''
-		,ant_pool1pw:'x'
-		,ant_pool2pw:'x'
-		,ant_pool3pw:''
-	}
-	
-}
-for(var ip=db.ipStart;ip<=db.ipEnd;ip++){
-	db.w.push(window.open(db.url.h+db.ipPrefix+ip+db.url.config));
-}
+app={
+ng:{scopes:[],models:[],templates:{} // add prop 'listeners' on each observable
+	/*,directives:{
+		model:function(){} // input , textarea , select , selected , checked , value
+		,repeat:function(){}//, ng-options										//needsTmpltReplacement
+		,'if':function(){} // ,style ,class ,switch+switchWhen+switchDefault	//needsTmpltReplacement
+		,init:function(){}
+		,moustache:function(){}// textNode, attrib-name, attrib-value, styleSheet 
+		,include:function(){} // change, click, form 							//needsTmpltReplacement
+		,template:function(){}//,												//needsTmpltReplacement
+		}//directives*/
+	,listener:function(scope,obj,props){}//register new listener
+	,directive:function(name,callBack,template){}//create new directive
+	,parseDom:function(n,parentScope){//n:: str or domNode ,str not implemented
+		const prefix=['ng-','{{','}}']
+		parseDom.newScope=function newScope(n,parentScope,atrb){//,directive
+			if(n&&!n.ngTmpltScope){
+			var p=n.ngTmpltScope={directives:[],parentScope:parentScope,tmplt:n};
+			if(atrb)p.atrb=atrb // if(directive)p.directive=directive //if(! parentScope.scopeChildren)parentScope.scopeChildren=[];parentScope.scopeChildren.push(p)
+			}return n&&n.ngTmpltScope;}
+		function parseMoustache(txt,parentScope,j,n,atrb){
+			var p=newScope(n,parentScope,atrb),i=0//'moustache'
+			while(j!=-1){
+				p.directives.push(x.substr(i,j))
+				j=x.indexOf(prefix[2],i=j+2)
+				p.directives.push({directive:'moustache',expr:x.substr(i,j)})
+				j=x.indexOf(prefix[1],i=j+2)
+			}p.directives.push(x.substr(i))
+			return p;} // function parseMoustache
+		function nod(n,parentScope){
+			if(n.nodeType==n.TEXT_NODE){
+				var x=n.data,j=x.indexOf(prefix[1])
+				if(j!=-1)
+					parseMoustache(x,parentScope,j,n)
+			}else if(n.nodeName=='SCRIPT'&&n.attributes&& 
+				n.attributes.type in ['ng-scope','ng-directive','ng-template']){
+				//TODO: implement
+			}else if(n.attributes)// check for directives in attribs
+			for(var i=0,a=n.attributes,p=0,o;a && i< a.length;i++){
+				var b=a[i],an=b.name,av=b.value,j
+				if(an.startsWith(prefix[0])){
+					if(!n.ngTmpltScope)
+						p=newScope(n,parentScope)
+					p.directives.push(o={directive:an.substr(prefix[0].length),attrib:b,name:an,val:av})
+					//if(o.directive in ng.needsTmpltReplacement)o.needsTmpltReplacement=true
+				}	//else if(an.indexOf(prefix[1])!=-1){}//TODO: implement
+				else if((j=av.indexOf(prefix[1]))!=-1)
+					p=parseMoustache(x,p||parentScope,j,n,b)
+			}
+			if(n.firstChild)
+				nod(n.firstChild,n.ngTmpltScope||parentScope)
+			if(n.nextSibling)
+				nod(n.nextSibling,parentScope);
+		} // function nod(n)
+		nod(n,parentScope)
+	}//parseDom
+	,f:function(){
+		//f.newScope=function newScope(){}
+		f.nod=function fNod(n,p){//p::=workingScope
+			if(n.ngTmpltScope){
+				var ts=n.ngTmpltScope
+				,pt=Object.assign({templateScope:ts},ts)
+				pt.n=ts.tmplt.cloneNode('deepClone')
+				pt.prototype=p
+				p=pt
+				pt=pt.n.parentNode;pt.replaceChild(p.n,ts.tmplt)
+				if(ts.directive=='moustache'){pt=[ts.directives];
+				}else
+				for(var i =0,a=ts.directives;i<a.length;i++)
+				//for(var i=0,a=n.attributes,p=0;a && i< a.length;i++)
+				{	var b=a[i],e=b.expr,v
+					try{v=eval(expr)}
+					catch(x){console.error('app.ng.f.nod:',n,b,x);}
+					switch(b.directive){
+						case 'moustache':if(n.nodeType==Node){//b.tmplt
+								
+							}else{
+								
+							}break;
+						case 'model'	:switch(n.nodeName){
+							case 'textarea':
+							case 'input':switch(n.type){
+								case 'checkbox':break;
+								case 'radio':break;
+								default:
+									
+									break;
+								}break;
+							case 'select':break;
+						};break;
+						case 'repeat'	:break;
+						case 'if'		:break;
+						case 'init'		:break;
+						case 'include'	:break;
+						case 'template'	:break;
+						case 'options'	:break;
+						case 'change'	:break;
+						case 'click'	:break;
+					}
+				}
+			}//if(n.ngTmpltScope)
+			if(n.firstChild)
+				f.nod(n.firstChild,n.ngScope||p)
+			if(n.nextSibling)
+				f.nod(n.nextSibling,p);
+		} // function fNod(n)
+		var workScope={ng:ng,app:app};
+		workScope.templateScope=ng.rootTmplt=workScope;
+		f.nod(document.body,workScope)
+	}//f
 
-</script><script>
-
-r=$0.tBodies[0].rows;
-for(var i in r){
-	var c=r[i].cells[1]
-	,h=c.innerHTML;
-	c.innerHTML='<a target=”'
-		+h+'” href="http://'
-		+h+'/cgi-bin/minerConfiguration.cgi">'
-		+h+'</a>'}
-
-</script><script>
-
-function(){
-state=0
-if(state==1){
-did=i=>document.getElementById(i);
-did('ant_pool1url').value='stratum+tcp://btc.viabtc.com:3333'
-did('ant_pool2url').value='stratum+tcp://sha256.eu.nicehash.com:3334'
-x=did('ant_pool1user')
-ip=location.host.split('.')[3]
-u=x.value.split('.')[1]
-if((j=u.indexOf('_'))!=-1)u=u.substr(0,j);
-//if(u.startsWith('111'))u='254h'+u;
-u+='x'+ip
-did('ant_pool1user').value='mohamadjb.'+u
-did('ant_pool2user').value='3ELG6esMRmeZ5evZG1UFQ248a6aRJrRr2o.'+u
-did('ant_pool1pw').value=did('ant_pool2pw').value='x'
-did('ant_pool3url').value=did('ant_pool3user').value=did('ant_pool3pw').value='';
-f_submit_miner_conf();
-
-}else if(state==2){
-location.href='http://'+location.host+'/network.html?'+document.getElementById('ant_pool1user').value.split('.')[1]
-
-}else if(state==3){
-document.getElementById('ant_conf_hostname').value=location.search.substr(1);f_submit_network_conf()
-
-}else if(state==4){
-a=location.host.split('.');a[3]=parseInt(a[3])+10;x=a.join('.');location.host=x
-}
-}
-
-</script><script>
-
-
-app={did:function app_did(id,n){if(!n)return document.getElementById(id);
+	,onload:function appNG_onload(){
+		ng.rootTmplt=parseDom.newScope(document.body,{})
+		ng.rootTmplt.parentScope=ng.rootTmplt;
+		app.ng.parseDom(ng.rootTmplt.tmplt,ng.rootTmplt)
+	}//function onload()
+}//ng
+,did:function app_did(id,n){if(!n)return document.getElementById(id);
 	var r=n;n=n.firstChild;while(n)if(n.id==id)return n;else n=n.nextSibling;
 	n=r.firstChild;while(n)if(r=did(id,n))return r;else n=n.nextSibling;}
 ,dce:function app_dce(n,p,t,i){var r=document.createElement(n);if(i)r.id=i;if(t)app.dct(t,r);if(p)p.appendChild(r);return r;}
@@ -134,127 +185,6 @@ xhr:function App_xhr(p)//data,callBack,asText)
 	//return asText?x.responseText:async?0:eval('('+x.responseText+')');
 	return p.asJson?JSON.parse ( x . responseText ) : x . responseText ;
 	}//function xhr
-,ng:{scopes:[],models:[],templates:{} // add prop 'listeners' on each observable
-	/*,directives:{
-		model:function(){} // input , textarea , select , selected , checked , value
-		,repeat:function(){}//, ng-options										//needsTmpltReplacement
-		,'if':function(){} // ,style ,class ,switch+switchWhen+switchDefault	//needsTmpltReplacement
-		,init:function(){}
-		,moustache:function(){}// textNode, attrib-name, attrib-value, styleSheet 
-		,include:function(){} // change, click, form 							//needsTmpltReplacement
-		,template:function(){}//,												//needsTmpltReplacement
-		}//directives*/
-	,listener:function(scope,obj,props){}//register new listener
-	,directive:function(name,callBack,template){}//create new directive
-	,compile:function(n,parentScope){//n:: str or domNode ,str not implemented
-		const prefix=['ng-','{{','}}']
-		compile.newScope=function newScope(n,parentScope,directive){
-			if(n&&!n.ngTmpltScope){
-			var p=n.ngTmpltScope={a:[],parentScope:parentScope,tmplt:n};
-			if(directive)p.directive=directive
-			//if(! parentScope.scopeChildren)parentScope.scopeChildren=[];parentScope.scopeChildren.push(p)
-			}return n&&n.ngTmpltScope;}
-		function parseMoustache(txt,parentScope,j,n){
-			var p=newScope(n,parentScope,'moustache'),i=0
-			while(j!=-1){
-				p.a.push(x.substr(i,j))
-				j=x.indexOf(prefix[2],i=j+2)
-				p.a.push({directive:'moustache',expr:x.substr(i,j)})
-				j=x.indexOf(prefix[1],i=j+2)
-			}p.a.push(x.substr(i))
-			return p;} // function parseMoustache
-		function nod(n,parentScope){
-			if(n.nodeType==n.TEXT_NODE){
-				var x=n.data,j=x.indexOf(prefix[1])
-				if(j!=-1)
-					parseMoustache(x,parentScope,j,n)
-			}else if(n.nodeName=='SCRIPT'&&n.attributes&& 
-				n.attributes.type in ['ng-scope','ng-directive','ng-template']){
-				//TODO: implement
-			}else if(n.attributes)// check for directives in attribs
-			for(var i=0,a=n.attributes,p=0,o;a && i< a.length;i++){
-				var b=a[i],an=b.name,av=b.value,j
-				if(an.startsWith(prefix[0])){
-					if(!n.ngTmpltScope)
-						p=newScope(n,parentScope)
-					p.a.push(o={directive:an.substr(3),attrib:b,name:an,val:av})
-					//if(o.directive in ng.needsTmpltReplacement)o.needsTmpltReplacement=true
-				}	//else if(an.indexOf(prefix[1])!=-1){}//TODO: implement
-				else if((j=av.indexOf(prefix[1]))!=-1)
-					p=parseMoustache(x,p||parentScope,j,[n,b])
-			}
-			// check child
-			if(n.firstChild)
-				nod(n.firstChild,n.ngTmpltScope||parentScope)
-			//check next sibling
-			if(n.nextSibling)
-				nod(n.nextSibling,parentScope);
-		} // function nod(n)
-		nod(n,parentScope)
-	}//compile
-	,apply:function(){
-		//apply.newScope=function newScope(){}
-		function nod(n,p){//p::=workingScope
-			if(n.ngTmpltScope){
-				var ts=n.ngTmpltScope
-				,pt=Object.assign({templateScope:ts},ts)
-				pt.n=ts.tmplt.cloneNode('deepClone')
-				pt.prototype=p
-				p=pt
-				pt=ts.tmplt.parentNode;pt.replaceChild(p.n,ts.tmplt)
-				if(ts.directive=='moustache'){
-					pt=[ts.a]
-				}else
-				for(var i =0,a=ts.a;i<a.length;i++)
-				//for(var i=0,a=n.attributes,p=0;a && i< a.length;i++)
-				{	var b=a[i],e=b.expr,v
-					try{v=eval(expr)}
-					catch(x){console.error('app.ng.apply.nod:',n,b,x);}
-					switch(b.directive){
-						case 'moustache':if(n.nodeType==Node){//b.tmplt
-								
-							}else{
-								
-							}break;
-						case 'model'	:switch(n.nodeName){
-							case 'textarea':
-							case 'input':switch(n.type){
-								case 'checkbox':break;
-								case 'radio':break;
-								default:
-									
-									break;
-								}break;
-							case 'select':break;
-						};break;
-						case 'repeat'	:break;
-						case 'if'		:break;
-						case 'init'		:break;
-						case 'include'	:break;
-						case 'template'	:break;
-						case 'options'	:break;
-						case 'change'	:break;
-						case 'click'	:break;
-					}
-				}
-			}
-			// check child
-			if(n.firstChild)
-				nod(n.firstChild,n.ngScope||p)
-			//check next sibling
-			if(n.nextSibling)
-				nod(n.nextSibling,p);
-		} // function nod(n)
-		var workScope={ng:ng,app:app,templateScope:ng.rootTmplt};
-		nod(document.body,workScope)
-	}//apply
 
-	,onload:function appNG_onload(){
-		ng.rootTmplt=compile.newScope(document.body,{})
-		ng.rootTmplt.parentScope=ng.rootTmplt;
-		app.ng.compile(ng.rootTmplt.tmplt,ng.rootTmplt)
-	}//function onload()
-}//ng
 }//app
 
-</script>
