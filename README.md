@@ -1,7 +1,7 @@
 # BlocklyJs
-blocks for Blockly that comprehensively cover all Javascript constructs , and blocks beyond the js-grammar
+<a href="https://developers.google.com/blockly/guides/create-custom-blocks/overview">custom-blocks</a> for Blockly that comprehensively cover all Javascript constructs , and blocks beyond the js-grammar
 
-build custom blocks that correspond to every construct and every syntax in javascript
+build custom-blocks that correspond to every construct and every syntax in javascript
 
 some examples of the custom blocks: (almost 140 custom blocks)
 <pre>
