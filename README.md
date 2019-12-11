@@ -3,7 +3,7 @@
 
 build custom-blocks that correspond to every construct and every syntax in javascript
 
-some examples of the custom blocks: (almost 200 custom blocks for the level0 fundamental-language, the remaining levels at a later stage of the development of this project)
+some examples of the custom blocks: (almost 81 custom blocks for the level0 fundamental-language, the remaining levels will be built at a later stage of the development of this project)
 <pre>
 Lang -LEVEL0 Core //classPackage
   Expr
@@ -128,7 +128,7 @@ LANG-LEVEL3
 	fs (and hierarchy and methods)
 	db
 		mysql (and hierarchy and methods)
-  npmLib
+  npm-lib
 	express (and hierarchy and methods)
 	sequelize (and hierarchy and methods)
   threeD (and hierarchy and methods)
@@ -182,13 +182,4 @@ LANG-LEVEL4
 	GeneratorFunction
 	AsyncFunction 
 	Reflect
-	
-	Intl
-	Intl.Collator
-	Intl.DateTimeFormat
-	Intl.ListFormat
-	Intl.NumberFormat
-	Intl.PluralRules
-	Intl.RelativeTimeFormat
-	Intl.Locale
 </pre>
