@@ -55,7 +55,7 @@ Lang -LEVEL0 Core //classPackage
 	Promise(constructor,then)	[count=1, accum=56] enums=2 
   Literal
 	String
-	Number
+	Number (decimal,octal,binary,hexBigInt,numeric_separators)
 	Boolean	[count=3, accum=59]
 	undefined null globalThis	[count=2, accum=61]
 	Array
@@ -95,7 +95,9 @@ Lang -LEVEL0 Core //classPackage
 	Continue	[count=1, accum=79]
 	Break	[count=1, accum=80]
 	methodCall(setParam//arrowFunction)	[count=1, accum=81]
-
+  (var,let,const,with,debugger,export,import)	[count=1, accum=82] enums=7
+  Comments(line,block)	[count=1, accum=83] enums=2
+	 
 LANG-LEVEL2
 	Reflect
 		Class
@@ -128,7 +130,7 @@ LANG-LEVEL3
 	fs (and hierarchy and methods)
 	db
 		mysql (and hierarchy and methods)
-  npm-lib
+  npmLib
 	express (and hierarchy and methods)
 	sequelize (and hierarchy and methods)
   threeD (and hierarchy and methods)
