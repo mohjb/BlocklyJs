@@ -1,6 +1,6 @@
 
 app={
-ng:{scopes:[],models:[],templates:{} // add prop 'listeners' on each observable
+ng:{prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{} // add prop 'listeners' on each observable
 	/*,directives:{
 		model:function(){} // input , textarea , select , selected , checked , value
 		,repeat:function(){}//, ng-options										//needsTmpltReplacement
@@ -10,10 +10,9 @@ ng:{scopes:[],models:[],templates:{} // add prop 'listeners' on each observable
 		,include:function(){} // change, click, form 							//needsTmpltReplacement
 		,template:function(){}//,												//needsTmpltReplacement
 		}//directives*/
-	,listener:function(scope,obj,props){}//register new listener
-	,directive:function(name,callBack,template){}//create new directive
-	,parseDom:function(n,parentScope){//n:: str or domNode ,str not implemented
-		const prefix=['ng-','{{','}}']
+	,listener:function listener(scope,obj,props){}//register new listener
+	,parseDom:function parseDom(n,parentScope){//n:: str or domNode ,str not implemented
+		var prefix=ng.prefix
 		parseDom.newScope=function newScope(n,parentScope,atrb){//,directive
 			if(n&&!n.ngTmpltScope){
 			var p=n.ngTmpltScope={directives:[],parentScope:parentScope,tmplt:n};
@@ -55,60 +54,99 @@ ng:{scopes:[],models:[],templates:{} // add prop 'listeners' on each observable
 		} // function nod(n)
 		nod(n,parentScope)
 	}//parseDom
-	,f:function(){
-		//f.newScope=function newScope(){}
-		f.nod=function fNod(n,p){//p::=workingScope
-			if(n.ngTmpltScope){
-				var ts=n.ngTmpltScope
-				,pt=Object.assign({templateScope:ts},ts)
-				pt.n=ts.tmplt.cloneNode('deepClone')
-				pt.prototype=p
-				p=pt
-				pt=pt.n.parentNode;pt.replaceChild(p.n,ts.tmplt)
-				if(ts.directive=='moustache'){pt=[ts.directives];
-				}else
-				for(var i =0,a=ts.directives;i<a.length;i++)
-				//for(var i=0,a=n.attributes,p=0;a && i< a.length;i++)
-				{	var b=a[i],e=b.expr,v
-					try{v=eval(expr)}
-					catch(x){console.error('app.ng.f.nod:',n,b,x);}
-					switch(b.directive){
-						case 'moustache':if(n.nodeType==Node){//b.tmplt
-								
-							}else{
-								
-							}break;
-						case 'model'	:switch(n.nodeName){
-							case 'textarea':
-							case 'input':switch(n.type){
-								case 'checkbox':break;
-								case 'radio':break;
-								default:
-									
-									break;
-								}break;
-							case 'select':break;
-						};break;
-						case 'repeat'	:break;
-						case 'if'		:break;
-						case 'init'		:break;
-						case 'include'	:break;
-						case 'template'	:break;
-						case 'options'	:break;
-						case 'change'	:break;
-						case 'click'	:break;
+	,bld:function bld(){
+		//bld.newScope=function newScope(){}
+		function procMoustache(a){
+			var b=[],c,x;for(var i in a){
+				c=a[i]
+				if(typeof(c)=='string' && c.length)
+					b.push(c)
+				else if(c.expr)
+					try{x=eval(c.expr);b.push(x)}catch(ex){}
+			}
+			x= b.join('')
+			return x;
+		}
+		bld.nod=function bldNod(n,p,exclude){//p::=workingScope
+			var ts=n.ngTmpltScope,a=ts&&ts.directives,active=1
+			if(ts){
+				if(n.nodeType==n.TEXT_NODE)
+					n.data=procMoustache(a)
+				else{
+					var pt=Object.assign({templateScope:ts},ts)
+					pt.n=ts.tmplt.cloneNode('deepClone')
+					pt.prototype=p
+					p=pt
+					pt=pt.n.parentNode;pt.replaceChild(p.n,ts.tmplt)
+					for(var i =0;i<a.length;i++)if(a[i]!=exclude)
+					{	var b=a[i],e=b.expr,v=e
+						if(e && !['repeat','options','moustache'].includes(b.directive))
+							try{v=eval(e)}
+							catch(x){console.error('app.ng.bld.nod:',n,b,x);}
+						switch(b.directive){
+							case 'moustache':
+									v=procMoustache(b.directives)
+									n.attributes[b.atr.name].value=v
+								break;
+							case 'model'	:switch(n.nodeName){
+								case 'TEXTAREA':n.value=v;break;
+								case 'INPUT':switch(n.type){
+									case 'CHECKBOX':n.checked=v;break;
+									case 'RADIO':break;//TODO:investigate,implement
+									default:
+										n.value=v;
+										break;
+									}break;
+								case 'SELECT':
+									for(var o in n.options)
+										o.selected=o==v||o.text==v||o.value==v
+									o.selected=v;
+								break;
+							};break;
+							case 'repeat'	:
+								n.removeAttribute(ng.prefix[0]+'repeat');
+								var s=e.split('in'),ix=p['$index']=0
+								try{v=p['$repeatIterations']=eval(s[1])
+									s=s[0].split('.');
+									for(var ri in v)
+									{	x=v[ri]
+										try{app.byPath(p,s.concat[x],1,1)
+											pt.insertBefore(ts.tmplt,n)
+											bld.nod(ts.tmplt,p)
+										}catch(x){console.error('app.ng.bld.nod:',n,b,x);}
+										p['$index']=++ix
+									}}
+								catch(x){console.error('app.ng.bld.nod:',n,b,x);}
+								pt.removeChild(n)
+								break;
+							case 'if'		:n.style.display=(active=v)?'':'none';break;
+							case 'init'		:break;
+							case 'include'	:break;
+							case 'template'	:break;
+							case 'options'	:if(n.nodeName=='SELECT'){
+									while(s.options.length)
+										n.removeChild(n.options[0])
+									for(var i in v){
+										x=document.createElement('option')
+										x.innerHTML=v[i]
+										n.appendChild(x)
+									}
+								};break;
+							case 'change'	:break;
+							case 'click'	:break;
+						}
 					}
 				}
 			}//if(n.ngTmpltScope)
-			if(n.firstChild)
-				f.nod(n.firstChild,n.ngScope||p)
+			if(active && n.firstChild)
+				bld.nod(n.firstChild,n.ngScope||p)
 			if(n.nextSibling)
-				f.nod(n.nextSibling,p);
-		} // function fNod(n)
+				bld.nod(n.nextSibling,p);
+		} // function bldNod(n)
 		var workScope={ng:ng,app:app};
 		workScope.templateScope=ng.rootTmplt=workScope;
-		f.nod(document.body,workScope)
-	}//f
+		bld.nod(document.body,workScope)
+	}//bld
 
 	,onload:function appNG_onload(){
 		ng.rootTmplt=parseDom.newScope(document.body,{})
@@ -185,6 +223,15 @@ xhr:function App_xhr(p)//data,callBack,asText)
 	//return asText?x.responseText:async?0:eval('('+x.responseText+')');
 	return p.asJson?JSON.parse ( x . responseText ) : x . responseText ;
 	}//function xhr
-
+,function byPath(o,p,isCreate,isSetLastValue){
+	var i=0,x, n=p&&p.length
+	while(o && i<n )
+	{	x=o[p[i]]
+		if(i<n && !x && isCreate)
+			x=o[p[i]]={}
+		if(isSetLastValue && i+2>=n && x)
+		{x=o[p[i]]=p[i+1];i++;}
+		o=x;i++
+	}return x;}//function byPath
 }//app
 
