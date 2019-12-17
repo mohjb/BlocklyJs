@@ -7,10 +7,11 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{} // add prop 'liste
 		,moustache:function(){}// textNode, attrib-name, attrib-value, styleSheet 
 		,include:function(){} // change, click, form 							//needsTmpltReplacement
 		,template:function(){}//,												//needsTmpltReplacement
+		,switch + case
 		}//directives*/
 	,listener:function listener(scope,obj,props){}//register new listener
 	,parseDom:function parseDom(n,parentScope){//n:: str or domNode ,str not implemented
-		var prefix=ng.prefix
+		var prefix=ng.prefix,switchStack=0
 		parseDom.newScope=function newScope(n,parentScope,atrb){//,directive
 			if(n&&!n.ngTmpltScope){
 			var p=n.ngTmpltScope={directives:[],parentScope:parentScope,tmplt:n};
@@ -25,35 +26,48 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{} // add prop 'liste
 				j=x.indexOf(prefix[1],i=j+2)
 			}p.directives.push(x.substr(i))
 			return p;} // function parseMoustache
+
+
 		function nod(n,parentScope){
 			if(n.nodeType==n.TEXT_NODE){
 				var x=n.data,j=x.indexOf(prefix[1])
 				if(j!=-1)
 					parseMoustache(x,parentScope,j,n)
-			}else if(n.nodeName=='SCRIPT'&&n.attributes&& 
-				n.attributes.type in ['ng-scope','ng-directive','ng-template']){
-				//TODO: implement
-			}else if(n.attributes)// check for directives in attribs
+			}//else //if(n.nodeName=='SCRIPT'&&n.attributes&& n.attributes.type in ['ng-scope','ng-directive','ng-template']){} //TODO: implement
+			else if(n.attributes)// check for directives in attribs
 			for(var i=0,a=n.attributes,p=0,o;a && i< a.length;i++){
 				var b=a[i],an=b.name,av=b.value,j
 				if(an.startsWith(prefix[0])){
 					if(!n.ngTmpltScope)
 						p=newScope(n,parentScope)
 					p.directives.push(o={directive:an.substr(prefix[0].length),attrib:b,name:an,val:av})
-					//if(o.directive in ng.needsTmpltReplacement)o.needsTmpltReplacement=true
+					if(o.directive=='switch'){if(!switchStack)switchStack=[];switchStack.push(n);}
+					else if(o.directive=='case' && switchStack){
+						var ss=switchStack[switchStack.length-1];
+						if(!ss.cases)ss.cases=[];
+						ss.cases.push(n);
+						ss=ss.ngTmpltScope;
+						if(!ss.cases)ss.cases=[];
+						ss.cases.push(p);
+						p.parentSwitch=ss;}
 				}	//else if(an.indexOf(prefix[1])!=-1){}//TODO: implement
 				else if((j=av.indexOf(prefix[1]))!=-1)
 					p=parseMoustache(x,p||parentScope,j,n,b)
 			}
 			if(n.firstChild)
 				nod(n.firstChild,n.ngTmpltScope||parentScope)
+			if(switchStack&&switchStack[switchStack.length-1]==n)
+				switchStack.pop();
 			if(n.nextSibling)
 				nod(n.nextSibling,parentScope);
 		} // function nod(n)
+
+
 		nod(n,parentScope)
 	}//parseDom
+
+
 	,bld:function bld(){
-		//bld.newScope=function newScope(){}
 		function procMoustache(a){
 			var b=[],c,x;for(var i in a){
 				c=a[i]
@@ -79,7 +93,7 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{} // add prop 'liste
 					for(var i =0;i<a.length;i++)if(a[i]!=exclude)
 					{	var b=a[i],e=b.expr,v=e
 						if(e && !['repeat','options','moustache'].includes(b.directive))
-							try{v=eval(e)}
+							try{with(p){v=eval(e)}}
 							catch(x){console.error('ng.ng.bld.nod:',n,b,x);}
 						switch(b.directive){
 							case 'moustache':
@@ -104,7 +118,7 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{} // add prop 'liste
 							case 'repeat'	:
 								n.removeAttribute(ng.prefix[0]+'repeat');
 								var s=e.split('in'),ix=p['$index']=0
-								try{v=p['$repeatIterations']=eval(s[1])
+								try{with(p){v=p['$repeatIterations']=eval(s[1])}
 									s=s[0].split('.');
 									for(var ri in v)
 									{	x=v[ri]
