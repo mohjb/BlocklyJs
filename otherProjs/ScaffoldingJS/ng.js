@@ -18,16 +18,16 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{},hid:{} // add prop
 		if(a=h.directives[prop])
 			a.push(directive)
 		else 
-			a=h.directives[prop]=[directive]
+			h.directives[prop]=[directive]
 		//check does getter/setter exist on the prop
 		if(!obj.__lookupGetter__(prop)){
-			obj.__defineGetter__(prop,p=>{return h.vals[prop];})
+			obj.__defineGetter__(prop,p=>h.vals[prop])
 			obj.__defineSetter__(prop,p=>{var old=h.vals[prop];
 				h.directives[prop].forEach(d=>{try{
 					ng.onChng(scope,obj,prop,d,h.vals[prop]=p,old)
 				}catch(ex){
 					console.error(ex,scope,obj,prop,d,h,p,old)
-				}});
+				}})
 				return p;})
 		}
 		h.vals[prop]=obj[prop]
