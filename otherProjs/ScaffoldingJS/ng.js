@@ -87,10 +87,6 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{},hid:{} // add prop
 
 		nod(n,parentScope)
 	}//parseDom
-
-	,onChng:function(scope,obj,prop,drctv,newVal,oldVal){
-		
-	}
 	,bld:function bld(){
 		function procMoustache(a){
 			var b=[],c,x;for(var i in a){
@@ -183,6 +179,10 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{},hid:{} // add prop
 		workScope.templateScope=ng.rootTmplt=workScope;
 		bld.nod(document.body,workScope)
 	}//bld
+	,onChng:function(scope,obj,prop,drctv,newVal,oldVal){
+		
+	}
+
 	,onload:window.onload=function appNG_onload(){
 		ng.rootTmplt=parseDom.newScope(document.body,{})
 		ng.rootTmplt.parentScope=ng.rootTmplt;
