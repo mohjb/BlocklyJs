@@ -60,7 +60,11 @@ public static void writeJson(String base,Date t,String x,Object json)
 	
 }//writeJson
 
-class ThreadClass2ScanIps extends Thread{}
+class ThreadClass2ScanIps extends Thread{
+	public void run(){
+		
+	}
+}
 
 class ThreadClass3Asic extends Thread{
 	String ip;
