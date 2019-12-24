@@ -25,7 +25,12 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
-
+import java.sql.Connection          ;
+import java.sql.Statement           ;
+import java.sql.PreparedStatement   ;
+import java.sql.ResultSet           ;
+import java.sql.ResultSetMetaData   ;
+import java.sql.SQLException        ;
 import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
@@ -38,9 +43,9 @@ import java.util.Base64;// Java 8
 //}
 class TL extends Thread{
 	Map m;//Connection dbc; used mainly for DB , jo
-	static TL tl(){TL tl=(TL)Thread.currentThread();return tl;}
-	static Object m(Object k){TL tl=(TL)Thread.currentThread();Object o=tl.m==null?null:m.get(k);return o;}
-	static Object m(Object k,Object v){TL tl=(TL)Thread.currentThread();if(tl.m==null)tl.m=new HashMap();tl.m.put(k,v);return v;}
+	static TL tl(){Thread t=Thread.currentThread();return t instanceof TL?(TL)t:Main.global;}
+	static Object m(Object k){TL tl=tl();Object o=tl.m==null?null:tl.m.get(k);return o;}
+	static Object m(Object k,Object v){TL tl=tl();if(tl.m==null)tl.m=new HashMap();tl.m.put(k,v);return v;}
 	static Main.Json.Output jo(){
 		Object o=m("jo");
 		Main.Json.Output j=o instanceof Main.Json.Output?
@@ -64,7 +69,64 @@ public static void main(String[]args)//class ThreadClass1 extends Thread{}
 	//start scan
 }//main
 
-public static void error(Throwable x,Object ...args){}//error
+public static void checkConfig(){
+	
+	/*
+	db-tbl:props.props:
+		rowId	int primary key auto_increment
+		user			varChar not null default ''
+		domain			varChar	//usually the house-id
+		mac				varChar not null default ''
+		lastModified	timestamp not null default current_timestamp on_update current_timestamp
+		propName		varChar not null default ''
+		propVal			json not null default ''
+		unique(user,mac,propName)
+		index (user,mac,propName,propVal)
+		index (user,domain,lastModified)
+
+	db-tbl:props.log:
+		rowId	int primary key auto_increment
+		user			varChar not null default ''
+		domain			varChar not null default ''
+		mac				varChar not null default ''
+		logged			timestamp not null default current_timestamp on_update current_timestamp
+		propName		varChar not null default ''
+		propVal			json not null default ''
+		index(user,logged,propName,propVal)
+		index(user,propName,propVal,logged)
+		index(user,domain,logged)
+		index(user,mac,logged)
+
+	config(per house)
+	propVal:json={
+		houses:[
+			{houseNo:<str>
+				ip:<str>
+			},,,
+		]
+		checkDB:{freq:<seconds:int>}
+		scan:{ip:{prefix:<str>,start:<int>,end:<int>},freq:<int:seconds>}
+		devices:[<mac:str>,,,]
+		]
+	}
+	<mac:str:asic>:json={
+		mac:<str>
+		ip:<str>
+		config:[{url:<str>,wallet:<str>,pw:<str>},,,]
+		info:{,,,}
+		status:{found:<num>,firmwareVersion:<str>,,,}
+		network:{type:<str>,host:<str>,,,}
+	}
+
+	<mac:str:asic>:propName:
+		asic.status.board.tempr		: {boardNo:<int>,val:<num>}
+		asic.status.board.hashRate	: {boardNo:<int>,val:<num>}
+		asic.status.board.<str>,,,	: {boardNo:<int>,val:<num>}
+		asic.status.fan.<str>,,,	: {fanNo:<int>,val:<num>}
+		asic.found:<int>
+		
+	*/
+}//checkConfig
 
 //public static void writeJson(String base,Date t,String x,Object json){}//writeJson
 enum AsicState{init,detectAsic,invalidWallet,wallet,config,monitor}
@@ -724,36 +786,30 @@ public static class DB {
 	 sets the pool as an application-scope attribute named context.pool.str
 	 when first time called, all next calls uses this context.pool.str*/
  public static synchronized Connection c()throws SQLException {
-		TL tl=TL.tl();Connection r=tl==null?null:tl.m==null?null:tl.m.get(context.reqCon.str);
+		Connection r=(Connection)m(context.reqCon.str);
 		if(r!=null)return r;
-		MysqlConnectionPoolDataSource d=(MysqlConnectionPoolDataSource)global.config.get(context.pool.str);
+		MysqlConnectionPoolDataSource d=(MysqlConnectionPoolDataSource)global.m(context.pool.str);
 		if(d!=null){r=d.getPooledConnection().getConnection();
-			
-			return r;
+			return m(context.reqCon.str,r);//if(r!=null)
 		}
-		if(r!=null)
-		{	
-			return r;}
 		else try
 		{int x=0;//context.getContextIndex(t);
-			t.log(Name,".DB.c:1:getContextIndex:",x);
 			if(x!=-1)
-			{	p=c(t,x,x,x,x);t.log(Name,".DB.c:1:c2:",p);
-				r=(Connection)p[1];
+			{	r=c(t,x,x,x,x);//t.log("DB.c:1:c2:",p);
 				return r;}
-		}catch(Throwable e){t.error(e,Name,".DB.MysqlConnectionPoolDataSource:throwable:");}//ClassNotFoundException
-		if(t.h.logOut)t.log(context.pool.str+":"+(p==null?null:p[0]));
+		}catch(Throwable e){t.error(e,"DB.MysqlConnectionPoolDataSource:throwable:");}//ClassNotFoundException
+		
 		if(r==null)try
 		{r=java.sql.DriverManager.getConnection
 			("jdbc:mysql://"+context.server.str
 			     +"/"+context.dbName.str
 			    ,context.un.str,context.pw.str
 			);Object[]b={r,null};
-			t.h.s(context.reqCon.str,b);
-		}catch(Throwable e){t.error(e,Name,".DB.DriverManager:");}
+			m(context.reqCon.str,b);
+		}catch(Throwable e){t.error(e,"DB.DriverManager:");}
 		return r;}
 
-	public static synchronized Object[]c(int idb,int iun,int ipw,int isr) throws SQLException{
+	public static synchronized Connection c(int idb,int iun,int ipw,int isr) throws SQLException{
 		MysqlConnectionPoolDataSource d=new MysqlConnectionPoolDataSource();
 		String ss=null,s=context.dbName.a[Math.min(context.dbName.a.length-1,idb)];
 		//if(t.h.logOut)ss="\ndb:"+s;
@@ -766,17 +822,17 @@ public static class DB {
 		s=context.pw.a[Math.min(context.pw.a.length-1,ipw)];if(t.h.logOut)ss+="\npw:"+s;
 		d.setPassword(s);
 		Connection r=d.getPooledConnection().getConnection();
-		//t.h.a(context.pool.str,d);
-		Object[]a={d,r,ss};//,b={r,null};t.s(context.reqCon.str,b);
+		global.m(context.pool.str,d);//t.h.a(context.pool.str,d);
+		m(context.reqCon.str,r);//Object[]a={d,r,ss};//,b={r,null};t.s(context.reqCon.str,b);
 		//stack(t,r);
-		return a;}
+		return r;}
 
 	/**returns a jdbc-PreparedStatement, setting the variable-length-arguments parameters-p, calls dbP()*/
 	public static PreparedStatement p( String sql, Object...p)throws SQLException{return P(sql,p);}
 	/**returns a jdbc-PreparedStatement, setting the values array-parameters-p, calls TL.dbc() and log()*/
 	public static PreparedStatement P(String sql,Object[]p)throws SQLException{return P(sql,p,true);}
 	public static PreparedStatement P(String sql,Object[]p,boolean odd)throws SQLException {
-		Connection c=dbc();//TL t=tl();
+		Connection c=c();//TL t=tl();
 		PreparedStatement r=c.prepareStatement(sql);
 		//if(t.h.logOut)	t.log(Name,"("+t+").DB.P(sql="+sql+",p="+p+",odd="+odd+")");
 		if(odd){if(p.length==1)
@@ -810,24 +866,24 @@ public static class DB {
 	 calls dpR() to set the variable-length-arguments parameters-p*/
 	public static String q1str(String sql,Object...p)throws SQLException{return q1Str(sql,p);}
 	public static String q1Str(String sql,Object[]p)throws SQLException
-	{String r=null;ResultSet s=null;try{s=R(sql,p);r=s.next()?s.getString(1):null;}finally{close(s);}return r;}//CHANGED:2015.10.23.16.06:closeRS ; CHANGED:2011.01.24.04.07 ADDED close(s,dbc());
+	{String r=null;ResultSet s=null;try{s=R(sql,p);r=s.next()?s.getString(1):null;}finally{close(s,true);}return r;}//CHANGED:2015.10.23.16.06:closeRS ; CHANGED:2011.01.24.04.07 ADDED close(s,dbc());
 	public static String newUuid()throws SQLException{return q1str("select uuid();");}
 	/**returns an java obj, which the result of executing sql,
 	 calls dpR() to set the variable-length-arguments parameters-p*/
 	public static Object q1obj(String sql,Object...p)throws SQLException{return q1Obj(sql,p);}
 	public static Object q1Obj(String sql,Object[]p)throws SQLException {
-		ResultSet s=null;try{s=R(sql,p);return s.next()?s.getObject(1):null;}finally{close(s);}}
+		ResultSet s=null;try{s=R(sql,p);return s.next()?s.getObject(1):null;}finally{close(s,true);}}
 	public static <T>T q1(String sql,Class<T>t,Object[]p)throws SQLException {
-		ResultSet s=null;try{s=R(sql,p);return s.next()?s.getObject(1,t):null;}finally{close(s);}}
+		ResultSet s=null;try{s=R(sql,p);return s.next()?s.getObject(1,t):null;}finally{close(s,true);}}
 	/**returns an integer or df, which the result of executing sql,
 	 calls dpR() to set the variable-length-arguments parameters-p*/
 	public static int q1int(String sql,int df,Object...p)throws SQLException{return q1Int(sql,df,p);}
 	public static int q1Int(String sql,int df,Object[]p)throws SQLException
-	{ResultSet s=null;try{s=R(sql,p);return s.next()?s.getInt(1):df;}finally{close(s);}}//CHANGED:2015.10.23.16.06:closeRS ;
+	{ResultSet s=null;try{s=R(sql,p);return s.next()?s.getInt(1):df;}finally{close(s,true);}}//CHANGED:2015.10.23.16.06:closeRS ;
 	/**returns a double or df, which is the result of executing sql,
 	 calls dpR() to set the variable-length-arguments parameters-p*/
 	public static double q1dbl(String sql,double df,Object...p)throws SQLException
-	{ResultSet s=null;try{s=R(sql,p);return s.next()?s.getDouble(1):df;}finally{close(s);}}//CHANGED:2015.10.23.16.06:closeRS ;
+	{ResultSet s=null;try{s=R(sql,p);return s.next()?s.getDouble(1):df;}finally{close(s,true);}}//CHANGED:2015.10.23.16.06:closeRS ;
 	/**returns as an array of rows of arrays of columns of values of the results of the sql
 	 , calls dbL() setting the variable-length-arguments values parameters-p*/
 	public static Object[][]q(String sql,Object...p)throws SQLException{return Q(sql,p);}
@@ -841,17 +897,16 @@ public static class DB {
 	 ,each row/element is an Object[] of the columns
 	 ,calls dbR() and dbcc() and dbclose(ResultSet,TL.dbc())*/
 	public static List<Object[]> L(String sql,Object[]p)throws SQLException {
-		TL t=tl();ResultSet s=null;List<Object[]> r=null;try{s=R(sql,p);Object[]a;r=new LinkedList<Object[]>();
+		ResultSet s=null;List<Object[]> r=null;try{s=R(sql,p);Object[]a;r=new LinkedList<Object[]>();
 			int cc=cc(s);while(s.next()){r.add(a=new Object[cc]);
 				for(int i=0;i<cc;i++){a[i]=s.getObject(i+1);
-				}}return r;}finally{close(s,t);//CHANGED:2015.10.23.16.06:closeRS ;
-			if(t.h.logOut)try{t.log(t.jo().w(Name).w(".DB.L:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}
-			catch(IOException x){t.error(x,Name,".DB.List:",sql);}}}
+				}}return r;}finally{close(s,true);//CHANGED:2015.10.23.16.06:closeRS ;
+			//if(t.h.logOut)try{t.log(t.jo().w(Name).w(".DB.L:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}
+			catch(IOException x){error(x,"DB.List:",sql);}}}
 
 	public static List<Integer[]>qLInt(String sql,Object...p)throws SQLException{return qLInt(sql,p);}//2017.07.14
 	public static List<Integer[]>QLInt(String sql,Object[]p)throws SQLException{//2017.07.14
-		TL tl=tl();
-		ResultSet s=null;
+		ResultSet s=null;//TL tl=tl();
 		List< Integer[]> r=null;
 		try{s=R(sql,p);
 			Integer[]a;
@@ -863,28 +918,29 @@ public static class DB {
 					a[i]=s.getInt(i+1);
 			}return r;
 		}finally
-		{close(s,tl);
-			if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.Lt:sql=")
-				                          .o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}
-			catch(IOException x){tl.error(x,Name,".DB.Lt:",sql);}
+		{close(s,true);
+			//if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.Lt:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.Lt:",sql);}
 		}
 	}
 
 	public static List<Object> q1colList(String sql,Object...p)throws SQLException
 	{ResultSet s=null;List<Object> r=null;try{s=R(sql,p);r=new LinkedList<Object>();
 		while(s.next())r.add(s.getObject(1));return r;}
-	finally{TL t=tl();close(s,t);if(t.h.logOut)
-		try{t.log(t.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
-			          .o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){t.error(x,Name,".DB.q1colList:",sql);}}}
+		finally{close(s,true);
+			//TL t=tl();if(t.h.logOut)try{t.log(t.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
+			//.o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){t.error(x,Name,".DB.q1colList:",sql);}
+		}
+	}
+
 	public static <T>List<T> q1colTList(String sql,Class<T>t,Object...p)throws SQLException
 	{ResultSet s=null;List<T> r=null;try{s=R(sql,p);r=new LinkedList<T>();//Class<T>t=null;
 		while(s.next())r.add(
 			s.getObject(1,t)
 			//s.getObject(1)
 		);return r;}
-	finally{TL tl=tl();close(s,tl);if(tl.h.logOut)
-		try{tl.log(tl.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
-			           .o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.q1colList:",sql);}}}
+		finally{close(s,tl);//TL tl=tl();if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
+		//.o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.q1colList:",sql);}
+	}}
 	public static Object[] q1col(String sql,Object...p)throws SQLException
 	{List<Object> l=q1colList(sql,p);Object r[]=new Object[l.size()];l.toArray(r);l.clear();return r;}
 	public static <T>T[] q1colT(String sql,Class<T>t,Object...p)throws SQLException
@@ -895,39 +951,37 @@ public static class DB {
 	public static Object[] q1Row(String sql,Object[]p)throws SQLException
 	{ResultSet s=null;try{s=R(sql,p);Object[]a=null;int cc=cc(s);if(s.next())
 	{a=new Object[cc];for(int i=0;i<cc;i++)try{a[i]=s.getObject(i+1);}
-	catch(Exception ex){tl().error(ex,Name,".DB.q1Row:",sql);a[i]=s.getString(i+1);}}
-		return a;}finally{close(s);}}//CHANGED:2015.10.23.16.06:closeRS ;
+	catch(Exception ex){error(ex,Name,".DB.q1Row:",sql);a[i]=s.getString(i+1);}}
+		return a;}finally{close(s,true);}}//CHANGED:2015.10.23.16.06:closeRS ;
 	/**returns the result of (e.g. insert/update/delete) sql-statement
 	 ,calls dbP() setting the variable-length-arguments values parameters-p
 	 ,closes the preparedStatement*/
 	public static int x(String sql,Object...p)throws SQLException{return X(sql,p);}
 	public static int X(String sql,Object[]p)throws SQLException {
-		int r=-1;try{PreparedStatement s=P(sql,p,false);r=s.executeUpdate();s.close();return r;}
-		finally{TL t=tl();if(t.h.logOut)try{
-			t.log(t.jo().w(Name).w(".DB.x:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}
-		catch(IOException x){t.error(x,Name,".DB.X:",sql);}}}
+		int r=-1;Connection c;PreparedStatement s;try{
+			s=P(sql,p,false);r=s.executeUpdate();c=s.getConnection();return r;}
+		finally{s.close();c.close();
+			//TL t=tl();if(t.h.logOut)try{t.log(t.jo().w(Name).w(".DB.x:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){t.error(x,Name,".DB.X:",sql);}
+		}}
 	/**output to tl.out the Json.Output.oRS() of the query*/
 	public static void q2json(String sql,Object...p)throws SQLException{
-		ResultSet s=null;
-		TL tl=tl();
+		ResultSet s=null;//TL tl=tl();
 		try{
 			s=R(sql,p);
 			try{
-				tl.getOut() .o(s); // (new Json.Output()) // TODO:investigate where the Json.Output.w goes
+				//tl.getOut() .o(s); // (new Json.Output()) // TODO:investigate where the Json.Output.w goes
 			}catch (IOException e) {e.printStackTrace();}
 		}
 		finally
-		{close(s,tl);
-			if(tl.h.logOut)try{
-				tl.log(tl.jo().w(Name).w(".DB.L:q2json=")
-					       .o(sql).w(",prms=").o(p).toStrin_());
-			}catch(IOException x){tl.error(x,Name,".DB.q1json:",sql);}
+		{close(s,true);
+			//if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.L:q2json=").o(sql).w(",prms=").o(p).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.q1json:",sql);}
 		}
 	}
 	/**return a list of maps , each map has as a key a string the name of the column, and value obj*/
-	static List<Map<String,Object>>json(String sql,Object...p) throws SQLException{return Lst(sql,p);}
+	//static List<Map<String,Object>>json(String sql,Object...p) throws SQLException{return Lst(sql,p);}
 	static List<Map<String,Object>>Lst(String sql,Object[ ]p) throws SQLException{
-		List<Map<String,Object>>l=new LinkedList< Map < String ,Object>>();ItTbl i=new ItTbl(sql,p);
+		List<Map<String,Object>>l=new LinkedList< Map < String ,Object>>();
+		ItTbl i=new ItTbl(sql,p);
 		List<String>cols=new LinkedList<String>();
 		for(int j=1;j<=i.row.cc;j++)cols.add(i.row.m.getColumnLabel(j));
 		for(ItTbl.ItRow w:i){Map<String,Object>m= new HashMap<String,Object>();l.add(m);
@@ -939,22 +993,17 @@ public static class DB {
 		public static ItTbl it(String sql,Object...p){return new ItTbl(sql,p);}
 		public ItTbl(String sql,Object[]p){
 			try {init(TL.DB.R(sql, p));}
-			catch (Exception e) {tl().logo(Name,".DB.ItTbl.<init>:Exception:sql=",sql,",p=",p," :",e);}}
+			catch (Exception e) {error(e,".DB.ItTbl.<init>:Exception:sql=",sql,",p=",p);}}
 		public ItTbl(ResultSet o) throws SQLException{init(o);}
 		public ItTbl init(ResultSet o) throws SQLException
 		{row.rs=o;row.m=o.getMetaData();row.row=row.col=0;
 			row.cc=row.m.getColumnCount();return this;}
-		static final String ErrorsList=Name+".DB.ItTbl.errors";
+		static final String ErrorsList="DB.ItTbl.errors";
 		@Override public boolean hasNext(){
 			boolean b=false;try {if(b=row!=null&&row.rs!=null&&row.rs.next())row.row++;
-			else TL.DB.close(row.rs);//CHANGED:2015.10.23.16.06:closeRS ; 2017.7.17
-			}catch (SQLException e) {//e.printStackTrace();
-				TL t=TL.tl();//changed 2016.06.27 18:05
-				final String str=Name+".DB.ItTbl.next";
-				t.error(e,str);
-				List l=(List)t.json.get(ErrorsList);//t.response
-				if(l==null)t.json.put(ErrorsList,l=new LinkedList());//t.response
-				l.add(Util.lst(str,row!=null?row.row:-1,e));
+			else DB.close(row.rs,true);//CHANGED:2015.10.23.16.06:closeRS ; 2017.7.17
+			}catch (SQLException e) {//TL t=TL.tl();//changed 2016.06.27 18:05final String str=Name+".DB.ItTbl.next";t.error(e,str);List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Util.lst(str,row!=null?row.row:-1,e));
+				error(e,this);
 			}return b;}
 		@Override public ItRow next() {if(row!=null)row.col=0;return row;}
 		@Override public void remove(){throw new UnsupportedOperationException();}
@@ -969,13 +1018,9 @@ public static class DB {
 			@Override public Object next(){
 				try {return rs==null?null:rs.getObject(++col);}
 				catch (SQLException e) {//changed 2016.06.27 18:05
-					TL t=TL.tl();
-					final String str=Name+".DB.ItTbl.ItRow.next";
-					t.error(e,str);
-					List l=(List)t.json.get(ErrorsList);//t.response
-					if(l==null)t.json.put(ErrorsList,l=new LinkedList());//t.response
-					l.add(Util.lst(str,row,col,e));
-				}//.printStackTrace();}
+					error(e,"DB.ItTbl.ItRow.next");
+					//TL t=TL.tl();final String str=Name+;List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Util.lst(str,row,col,e));
+				}
 				return null;}
 			@Override public void remove(){throw new UnsupportedOperationException();}
 			public int nextInt(){
@@ -1473,7 +1518,7 @@ public static class DB {
 }//class DB
 
 static class Util{
-public static <T>T parse(String s,T defval){
+	public static <T>T parse(String s,T defval){
 		if(s!=null)try{
 			Class<T> ct=(Class<T>) defval.getClass();
 			Class c=ct;
@@ -1486,6 +1531,7 @@ public static <T>T parse(String s,T defval){
 			}}catch(Exception x){//changed 2016.06.27 18:28
 			TL.tl().error(x, Name,".Util.<T>T parse(String s,T defval):",s,defval);}
 		return defval;}
+
 	public static Object parse(String s,Class c){
 		if(s!=null)try{if(String.class.equals(c))return s;
 		else if(Number.class.isAssignableFrom(c)||c.isPrimitive()) {
