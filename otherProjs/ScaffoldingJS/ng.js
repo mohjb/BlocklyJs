@@ -103,7 +103,9 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{},hid:{} // add prop
 			var ts=n.ngTmpltScope,a=ts&&ts.directives,active=1
 			if(ts){
 				if(n.nodeType==n.TEXT_NODE)
-					n.data=procMoustache(a)
+				{	n.data=procMoustache(a)
+					
+				}
 				else{
 					var pt=Object.assign({templateScope:ts},ts)
 					pt.n=ts.tmplt.cloneNode('deepClone')
@@ -203,4 +205,7 @@ ng={prefix:['ng-','{{','}}'],scopes:[],models:[],templates:{},hid:{} // add prop
 		n=r.firstChild;while(n)if(r=did(id,n))return r;else n=n.nextSibling;}
 	,dce:function app_dce(n,p,t,i){var r=document.createElement(n);if(i)r.id=i;if(t)ng.dct(t,r);if(p)p.appendChild(r);return r;}
 	,dct:function app_dct(t,p){var r=document.createTextNode(t);if(p)p.appendChild(r);return r;}
+	,isIdentifier:function(expr){
+		
+	}
 }//ng
