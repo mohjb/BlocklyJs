@@ -1,0 +1,99 @@
+<html ng-app="myApp" ng-controller="myCtrl">
+<head>
+<script src="/ng/angular.min.js"></script>
+<script src="/angular-1.6.4/angular.min.js"></script>
+<!--script src="../../../../../dev/angular-1.7.8/angular.min.js"></script-->
+<script >
+linkedlist={lnk:function lnk(o,chain,before){
+	if(o.next=chain.next)chain.next.prev=o;
+	chain.next=o;o.prev=chain;
+	return o;}
+,unlnk:function unlnk(o){
+	var p=o.prev,n=o.next;//if(p)
+	p.next=n;//if(n)
+	n.prev=p;
+	//o.next=o.prev=null;
+	return o;}
+,create:function createHead(){
+	var o={headDummy:true,a:function(){var a=[],n=this.next;while(!n.headDummy){a.push(n);n=n.next;}return a;}}
+	o.next=o.prev=o;
+	return o;}}
+
+app = angular.module("myApp", [])
+
+app.controller("myCtrl", function($scope, $http) {
+	var p=$scope ;
+	p.houseNo=258;
+	p.ipPrefix='192.168.1.';
+	p.ipStart=100;p.ipEnd=254;
+	p.wallet='mohamadjb.'//'3ELG6esMRmeZ5evZG1UFQ248a6aRJrRr2o.';
+	p.walletUrl='stratum+tcp://btc.viabtc.com:3333'//'stratum+tcp://sha256.eu.nicehash.com:3334'
+	p.ips={};p.macs={};p.pendingReqs={};p.pending={};
+	(p.Cats=['info','config','net','status']).forEach(
+		k=>p.pending[k]=p.pendingReqs[k]=linkedlist.create())
+
+	p.scan=function(){
+		var cat=p.Cats[0];
+		console.log('scan-start:',cat);
+		for(var ip=p.ipStart;ip<=p.ipEnd;ip++)
+			if(!p.ips[ip])scn(ip)
+		function scn(ip){
+			var o=linkedlist.lnk({ip:ip,cat:cat,started:new Date()},p.pendingReqs[cat])
+			p.refrsh(cat)
+			o.req=$http({url:'/scan/:'+p.ipPrefix+ip+'/'+cat+'/'+cat,method:'GET',data:o})
+			.then(function(res){//console.log('scan:res=',res);
+				var x=o.resData=res.data;//o.res=res;
+				linkedlist.unlnk(o);
+				if(x.mac){
+					p.ips[ip]=o
+					p.macs[x.max]=o
+					console.log('scan.scn.res:registered:',o,res)
+				}else
+					console.log('scan.scn.res:wasted:',o,res)
+				p.refrsh(cat)
+			})//http.then
+		}//scn
+	}//function scan
+	
+	p.refrsh=function(cat){if(!cat)cat=p.Cats[0]
+		p.pending[cat]=p.pendingReqs[cat].a()
+		p.$apply();}
+	})//controller
+
+</script>
+<title>moh:december-asics-app </title>
+	<meta charset="utf-8" />
+	<style>
+	table ,tr ,th ,td,ol,li{border:1px solid black;width:95%;}
+	</style>
+</head>
+<body style="margin: 0;text-align:center">
+	<fieldset style="display:inline"><legend>wallet-url</legend><input size=45 type="text" ng-model="walletUrl" value="ro"/></fieldset>
+	<fieldset style="display:inline"><legend>wallet</legend><input size=45 type="text" ng-model="wallet" value="ro"/></fieldset>
+	<!-- wallet_prefix:<input type="text" ng-model="walletPrefix" value="ro"/><br/-->
+	<fieldset style="display:inline"><legend>houseNo:</legend><input size=3 type="text" ng-model="houseNo" value="ro"/></fieldset>
+	<fieldset style="display:inline"><legend>ip-prefix:</legend><input size=10 type="text" ng-model="ipPrefix" /></fieldset>
+	<fieldset style="display:inline"><legend>ip-start:</legend><input size=3 type="text" ng-model="ipStart" /></fieldset>
+	<fieldset style="display:inline"><legend>ip-end:</legend><input size=3 type="text" ng-model="ipEnd" /></fieldset>
+	<button ng-click="scan()">scan</button><button ng-click="refrsh()">refrsh</button>
+
+	<table><tr>
+		<td>
+			MAC Address<ol>
+			<li ng-repeat="mac in macs">{{mac.ip}}</li>
+			</ol>
+		</td>
+		<td>
+			IPs<ol>
+			<li ng-repeat="ip in ips">{{ip.ip}}</li>
+			</ol>
+		</td></tr></table>
+
+		<hr/>Pending Requests:
+		<table><tr><td ng-repeat="cat in Cats">
+			{{cat}}<ol ng-init="a=pending[cat]">
+			<li ng-repeat="x in a">{{x.ip}}:{{x.started}}</li>
+			</ol></td></tr></table>
+	<hr/>
+v2019-12-26 9:18
+</body></html>
