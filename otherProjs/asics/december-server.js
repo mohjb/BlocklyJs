@@ -1,6 +1,4 @@
 srvr={
-// npm install --save node-html-parser
-// HTMLParser : require('node-html-parser'),
 Authorization:
 'Digest username="root", realm="antMiner Configuration", nonce="b1b1652793d3109e9b29f0c3a111ffe5", uri="/", response="1fa4707b57aac3ad574bcd0f044f1cc8", qop=auth, nc=00000001, cnonce="680d2ef66564dc19"'
 ,macs:{},ips:{}
@@ -255,17 +253,12 @@ Accept-Language: en-US,en;q=0.9,ar;q=0.8
 ,init:function init(){var t=srvr
 	,app=t. app=t. express()
 	,express=t.express
-	,fs=require('fs')
-	,ngPaths=['C:\\dev\\angular-1.7.8'
-	,'C:\\apache-tomcat-8.0.15\\webapps\\ROOT\\angular-1.6.4']
 
 	var router=t.router=express.Router();
 	if(app)app.router=router;
 
 	router.use(	'/', express.static('./'));
-	router.use(	'/ng/', express.static(fs.existsSync(ngPaths[0])?ngPaths[0]:ngPaths[1]));
 
-	//	ipStart	ipEnd	ipPrefix	wallet	walletUrl	houseNo
 	router.post('/post/', async(req,rsp,next)=>{
 		try{
 			let b=req.body

@@ -1,12 +1,11 @@
 <html ng-app="myApp" ng-controller="myCtrl">
 <head>
-<script src="/ng/angular.min.js"></script>
-<script src="/angular-1.6.4/angular.min.js"></script>
-<!--script src="../../../../../dev/angular-1.7.8/angular.min.js"></script-->
+<script src="angular.min.js"></script>
 <script >
 linkedlist={lnk:function lnk(o,chain,before){
 	if(o.next=chain.next)chain.next.prev=o;
 	chain.next=o;o.prev=chain;
+	if(chain.headDummy)chain.count++
 	return o;}
 ,unlnk:function unlnk(o){
 	var p=o.prev,n=o.next;//if(p)
@@ -14,15 +13,24 @@ linkedlist={lnk:function lnk(o,chain,before){
 	n.prev=p;
 	//o.next=o.prev=null;
 	return o;}
-,create:function createHead(){
-	var o={headDummy:true,a:function(){var a=[],n=this.next;while(!n.headDummy){a.push(n);n=n.next;}return a;}}
-	o.next=o.prev=o;
+,create:function createHead(id){
+	var o={headDummy:true,count:0
+	//,_hash:id//Date.now().toString(16)
+	,a:function(){
+		var a=[],n=this.next;
+		console.log('linkedlist:head.a:',this)
+		while(!n.headDummy){
+			a.push(n);n=n.next;
+		}return a;}
+	,toString:function(){
+		var t=this;return '{count:'+t.count+',_hash:'+t._hash+'}';}
+	}
+	o._hash=id(o.next=o.prev=o);
 	return o;}}
-
-app = angular.module("myApp", [])
+var p=0,app = angular.module("myApp", [])
 
 app.controller("myCtrl", function($scope, $http) {
-	var p=$scope ;
+	p=app.p=$scope ;p.ids={};p.newId=(o)=>{var i;while(p.ids[i=Date.now().toString(16)]);p.ids[i]=o;return i;}
 	p.houseNo=258;
 	p.ipPrefix='192.168.1.';
 	p.ipStart=100;p.ipEnd=254;
@@ -30,7 +38,7 @@ app.controller("myCtrl", function($scope, $http) {
 	p.walletUrl='stratum+tcp://btc.viabtc.com:3333'//'stratum+tcp://sha256.eu.nicehash.com:3334'
 	p.ips={};p.macs={};p.pendingReqs={};p.pending={};
 	(p.Cats=['info','config','net','status']).forEach(
-		k=>p.pending[k]=p.pendingReqs[k]=linkedlist.create())
+		k=>p.pending[k]=p.pendingReqs[k]=linkedlist.create(p.newId))
 
 	p.scan=function(){
 		var cat=p.Cats[0];
@@ -57,7 +65,8 @@ app.controller("myCtrl", function($scope, $http) {
 	
 	p.refrsh=function(cat){if(!cat)cat=p.Cats[0]
 		p.pending[cat]=p.pendingReqs[cat].a()
-		p.$apply();}
+		//p.$apply();
+		}
 	})//controller
 
 </script>
@@ -89,11 +98,30 @@ app.controller("myCtrl", function($scope, $http) {
 			</ol>
 		</td></tr></table>
 
+		<hr/>p={{ p }}
 		<hr/>Pending Requests:
-		<table><tr><td ng-repeat="cat in Cats">
-			{{cat}}<ol ng-init="a=pending[cat]">
-			<li ng-repeat="x in a">{{x.ip}}:{{x.started}}</li>
-			</ol></td></tr></table>
+		<table><tr>
+		<td>info
+			 <ol>
+			pending[cat]={{ pending.info }}
+			<li ng-repeat="x in pending.info">{{x.ip}}:{{x.started}}</li>
+			</ol></td>
+		<td>config
+			 <ol>
+			pending[cat]={{ pending.config }}
+			<li ng-repeat="x in pending.config">{{x.ip}}:{{x.started}}</li>
+			</ol></td>
+		<td>net
+			 <ol>
+			pending[cat]={{ pending.net }}
+			<li ng-repeat="x in pending.net">{{x.ip}}:{{x.started}}</li>
+			</ol></td>
+		<td>status
+			 <ol>
+			pending[cat]={{ pending.status }}
+			<li ng-repeat="x in pending.status">{{x.ip}}:{{x.started}}</li>
+			</ol></td>
+		</tr></table>
 	<hr/>
 v2019-12-26 9:18
 </body></html>
