@@ -98,27 +98,22 @@ app.controller("myCtrl", function($scope, $http) {
 			</ol>
 		</td></tr></table>
 
-		<hr/>p={{ p }}
 		<hr/>Pending Requests:
 		<table><tr>
-		<td>info
-			 <ol>
-			pending[cat]={{ pending.info }}
+		<td>info {{pendingReqs.info}}<ol>
+			pending[cat]={{ pending.info.length }}
 			<li ng-repeat="x in pending.info">{{x.ip}}:{{x.started}}</li>
 			</ol></td>
-		<td>config
-			 <ol>
-			pending[cat]={{ pending.config }}
+		<td>config {{pendingReqs.config}}<ol>
+			pending[cat]={{ pending.config.length }}
 			<li ng-repeat="x in pending.config">{{x.ip}}:{{x.started}}</li>
 			</ol></td>
-		<td>net
-			 <ol>
-			pending[cat]={{ pending.net }}
+		<td>net {{pendingReqs.net}}<ol>
+			pending[cat]={{ pending.net.length }}
 			<li ng-repeat="x in pending.net">{{x.ip}}:{{x.started}}</li>
 			</ol></td>
-		<td>status
-			 <ol>
-			pending[cat]={{ pending.status }}
+		<td>status {{pendingReqs.status}}<ol>
+			pending[cat]={{ pending.status.length }}
 			<li ng-repeat="x in pending.status">{{x.ip}}:{{x.started}}</li>
 			</ol></td>
 		</tr></table>

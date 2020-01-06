@@ -259,7 +259,8 @@ Accept-Language: en-US,en;q=0.9,ar;q=0.8
 
 	router.use(	'/', express.static('./'));
 
-	router.post('/post/', async(req,rsp,next)=>{
+	router.post('/post/', //async
+		(req,rsp,next)=>{
 		try{
 			let b=req.body
 			rsp.json(srvr.decycle(srvr));
@@ -268,21 +269,24 @@ Accept-Language: en-US,en;q=0.9,ar;q=0.8
 			rsp.sendStatus(500);}
 	} );
 
-	router.get('/scan/:ip/:url/:json', async(req,rsp,next)=>{
+	router.get('/scan/:ip/:url/:json', //async
+		(req,rsp,next)=>{
 		try{var p=req.params,ip=p.ip,url=p.url,jsonStr=p.json
 			rsp.json(srvr.decycle(srvr.check(ip,url,jsonStr)))
 		}catch(ex){
 			console.log(ex);
 			rsp.sendStatus(500);}
 	} );
-	router.get('/cachedIp/:ip', async(req,rsp,next)=>{
+	router.get('/cachedIp/:ip', //async
+		(req,rsp,next)=>{
 		try{var p=req.params,ip=p.ip
 			rsp.json(srvr.decycle(p.ips[ip]))
 		}catch(ex){
 			console.log(ex);
 			rsp.sendStatus(500);}
 	} );
-	router.get('/cachedMac/:mac', async(req,rsp,next)=>{
+	router.get('/cachedMac/:mac', //async
+		(req,rsp,next)=>{
 		try{var p=req.params,mac=p.mac
 			rsp.json(srvr.decycle(p.macs[mac]))
 		}catch(ex){
@@ -290,7 +294,8 @@ Accept-Language: en-US,en;q=0.9,ar;q=0.8
 			rsp.sendStatus(500);}
 	} );
 
-	router.get('/macs/', async(req,rsp,next)=>{
+	router.get('/macs/', //async
+		(req,rsp,next)=>{
 		try{var p=req.params,a=Object.keys(srvr.macs)
 			rsp.json(srvr.decycle(a))
 		}catch(ex){
@@ -298,7 +303,8 @@ Accept-Language: en-US,en;q=0.9,ar;q=0.8
 			rsp.sendStatus(500);}
 	} );
 
-	router.get('/ips/', async(req,rsp,next)=>{
+	router.get('/ips/', //async
+		(req,rsp,next)=>{
 		try{var p=req.params,a=Object.keys(srvr.ips)
 			rsp.json(srvr.decycle(a))
 		}catch(ex){
