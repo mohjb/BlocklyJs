@@ -1,4 +1,5 @@
 /otherProjs/asics/node_modules/
+/otherProjs/asics/output/
 otherProjs/asics/package.json
 otherProjs/asics/package-lock.json
 *.class

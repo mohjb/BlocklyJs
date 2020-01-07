@@ -12,7 +12,10 @@ import java.nio.file.Files;
 //}
 
 public class MainTest01 extends TL{
-AsicsScanner scan;static String baseDir;
+AsicsScanner scan;
+static String baseDir;
+static MainTest01 sttc;
+Date now;
 List<Asic>asics=new LinkedList<Asic>();
 
 static void w(String fn,String x){
@@ -21,7 +24,7 @@ static void w(String fn,String x){
 		error(e,"MainTest01.w",fn,x);}}
 
 public static void main(String[]args)//class ThreadClass1 extends Thread{}
-{baseDir=new File("./output/").getCanonicalPath();
+{baseDir=sttc=new File("./output/").getCanonicalPath();
 	new MainTest01();
 	/*{
 multi-threaded agent
@@ -66,8 +69,8 @@ static class Asic extends TL{
 		,status("/cgi-bin/minerStatus.cgi");
 		String s;Path(String p){s=p;}}
 
-	public void startScan(){
-	 try {URL url = new URL(base,Path.info.s);
+	public void f(Path p)throws Exception{
+		URL url = new URL(base,p.s);
 		URLConnection urlConnection = url.openConnection();
 		urlConnection.setRequestProperty("Authorization", Authorization);
 		InputStream is = urlConnection.getInputStream();
@@ -79,13 +82,16 @@ static class Asic extends TL{
 			sb.append(charArray, 0, numCharsRead);
 		String result = sb.toString();
 		//TODO: implement parsing Path.info result string
-		w("out"+(new Date().getTime())+".html",result);
-	 } catch (Exception e) {
-		error(e,"Asic.startScan");}
+		w(ip+'.'+p+'.'+(new Date().getTime())+".html",result);
 	}
 
+	public void startScan()throws Exception{f(Path.info);}
 
 	public void startMonitor(){
+		while(ip>=0)try{
+			for(Path p:Path.values())f(p);
+			Thread.sleep(sttc.scan.sleep);
+		}catch(Exception ex){error(ex,"Asic.startMonitor",ipPrefix,ip,p);}
 		//loop
 			//check status // tempr blocksFound hashRate
 			//check network
@@ -95,7 +101,13 @@ static class Asic extends TL{
 			//check any-new user-commands
 	}
 
-	public void run(){startScan();}
+	public void run(){try{
+		startScan();
+		startMonitor();
+		}finally{
+			
+		}
+	}
 
 	public void checkInfo(){}
 	public void checkConfig(){}
