@@ -50,8 +50,9 @@ public static void main(String[]args)
 
 MainTest01(){
 	if(global==null)sttc=global=this;
-	String prefix="192.168.1.";
-	int startPort=100,endPort=104,sleep=5000;
+	String prefix="192.168.8.";
+	int startPort= 141 ,endPort= 141 ,sleep=5000;
+	w(141+"/",global.now,"testW",".html","test");
 	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	scan.start();
 }
