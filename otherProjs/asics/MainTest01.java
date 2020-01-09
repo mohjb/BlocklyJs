@@ -1,59 +1,62 @@
+
 //{
 import java.net.URL;
-import java.net.URLConnection;
-import java.net.HttpURLConnection;
+import java.net.URLConnection;//import java.net.HttpURLConnection;
+import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.nio.file.Files;
-
+import java.io.File;
 //}
 
-public class MainTest01 extends TL{
-AsicsScanner scan;
+public class MainTest01 extends Json{
 static String baseDir;
-static MainTest01 sttc;
+static MainTest01 global;
+AsicsScanner scan;
 Date now;
 List<Asic>asics=new LinkedList<Asic>();
 
-static void w(String fn,String x){
-	try {Files.write(Paths.get(baseDir,fn),x.getBytes());
+static String dt2path(Date d){
+	//DateTimeFormatter df=new DateTimeFormatter("yyyy/MM/dd/HH/mm/");//new SimpleDateFormat("yyyy/MM/dd/HH/mm/");
+	String pattern = "yyyy/MM/dd/HH/mm/";//"yyyy-MM-dd";
+	SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+	String date = simpleDateFormat.format(d);
+	return date;}
+
+static String dt2secs(Date d){
+		String pattern = ".ss.SSS.";
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+		String date = simpleDateFormat.format(d);
+		return date;}
+
+static void w(String pf,Date now,String fn,String ext,String x){
+	try {
+		String p=baseDir+(pf!=null?pf:"")+dt2path(now);
+		File f=new File(p);
+		f.mkdirs();
+		Files.write(Paths.get(p,fn+dt2secs(now)+ext),x.getBytes());
 	 } catch (Exception e) {
 		error(e,"MainTest01.w",fn,x);}}
 
-public static void main(String[]args)//class ThreadClass1 extends Thread{}
-{baseDir=sttc=new File("./output/").getCanonicalPath();
-	new MainTest01();
-	/*{
-multi-threaded agent
-
-thread-class1: (single thread-class instance, MainTest01-class) init-from config-file and update global-config
-	, and periodically check config-file changes
-	,and, check local-agents and threads working/existing/alive
-thread-class2: (single thread-class instance) scan ips, and update global-config
-thread-class3: (multiple thread-class instances) read assigned-ip asic
-thread-class4: (multiple thread-class instances) check assigned house
-
-to read ascis, and other agents from other houses
-
-}*/
+public static void main(String[]args)
+{try{baseDir=new File("./output/").getCanonicalPath();
+	new MainTest01();}catch(Exception e){
+		error(e,"main");}
 }//main 
 
 MainTest01(){
-	//check db config
-	if(global==null)global=this;//start scan
+	if(global==null)sttc=global=this;
 	String prefix="192.168.1.";
-	int startPort=100,endPort=104,sleep=1000;
+	int startPort=100,endPort=104,sleep=5000;
 	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	scan.start();
 }
 
-public static void log(Object...s){Json.logA(s);}
-public static void error(Throwable x,Object...p){Json.errorA(x,p);}
-
-static class Asic extends TL{
+static class Asic extends Json{
 	final static String Authorization=
 	"Digest username=\"root\", realm=\"antMiner Configuration\", nonce=\"b1b1652793d3109e9b29f0c3a111ffe5\", uri=\"/\", response=\"1fa4707b57aac3ad574bcd0f044f1cc8\", qop=auth, nc=00000001, cnonce=\"680d2ef66564dc19\"";
 	URL base;//HttpURLConnection conn;//String ip,host;int[]port;
@@ -82,38 +85,30 @@ static class Asic extends TL{
 			sb.append(charArray, 0, numCharsRead);
 		String result = sb.toString();
 		//TODO: implement parsing Path.info result string
-		w(ip+'.'+p+'.'+(new Date().getTime())+".html",result);
+		w(ip+"/",global.now,p.toString(),".html",result);
 	}
 
-	public void startScan()throws Exception{f(Path.info);}
+	public void startScan()throws Exception{
+		f(Path.info);
+		global.scan.asics.remove(this);
+		global.asics.add(this);
+	}
 
 	public void startMonitor(){
-		while(ip>=0)try{
-			for(Path p:Path.values())f(p);
-			Thread.sleep(sttc.scan.sleep);
-		}catch(Exception ex){error(ex,"Asic.startMonitor",ipPrefix,ip,p);}
-		//loop
-			//check status // tempr blocksFound hashRate
-			//check network
-			//check miner-config // wallets
-			//check info
-			//check diff sys-log
-			//check any-new user-commands
+		while(ip>=0)
+		try{
+			for(Path p:Path.values())
+				f(p);
+			Thread.sleep(global.scan.sleep);
+		}catch(Exception ex){error(ex,"Asic.startMonitor",base);}//,ipPrefix,p
 	}
 
 	public void run(){try{
 		startScan();
 		startMonitor();
-		}finally{
-			
-		}
+		}catch(Exception ex){
+			error(ex,"Asic.run",base);}
 	}
-
-	public void checkInfo(){}
-	public void checkConfig(){}
-	public void checkNet(){}
-	public void checkStatus(){}
-	public void checkSysLog(){}
 
 	public Asic(String ipPrefix,int ip){
 		try{base=new URL("http",ipPrefix+(this.ip=ip),80,"");
@@ -141,11 +136,14 @@ class AsicsScanner  extends TL{
 	public void run(){startScan();}
 
 	public void startScan(){
-		for(int i=ports[0];i<=ports[1];i++){
-			Asic asic=new Asic(prefix,i);
+		for(int ip=ports[0];ip<=ports[1];ip++)try{
+			Asic asic=new Asic(prefix,ip);
 			asics.add(asic);
 			asic.start();
 			log("AsicsScanner .startScan:",asic);
+		}catch(Exception x){
+			error(x,"AsicsScanner.startScan:",ip);
+			//asics.remove(o)
 		}
 	}
 

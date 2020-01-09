@@ -10,10 +10,8 @@ import java.io.FileReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-//import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URL;
-//import java.net.URLConnection;import java.net.HttpURLConnection;
+import java.net.URL;//import java.lang.reflect.Field;//import java.net.URLConnection;import java.net.HttpURLConnection;//import java.util.Base64;// Java 8
 import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
@@ -22,49 +20,47 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Enumeration;
 import java.util.Date;
-//import java.util.Base64;// Java 8
 //}
-class TL extends Thread{
+
+class Json extends Thread{
 	Map m;//Connection dbc; used mainly for DB , jo
-	static TL global;
-	static TL tl(){Thread t=Thread.currentThread();return t instanceof TL?(TL)t:global;}
-	static Object m(Object k){TL tl=tl();Object o=tl.m==null?null:tl.m.get(k);return o;}
-	static Object m(Object k,Object v){TL tl=tl();if(tl.m==null)tl.m=new HashMap();tl.m.put(k,v);return v;}
-	static Json.Output jo(){
+	static Json sttc;
+	static Json tl(){Thread t=Thread.currentThread();return t instanceof Json?(Json)t:sttc;}
+	static Object m(Object k){Json tl=tl();Object o=tl.m==null?null:tl.m.get(k);return o;}
+	static Object m(Object k,Object v){
+		Json tl=tl();if(tl.m==null)tl.m=new HashMap();tl.m.put(k,v);return v;}
+	static Output jo(){
 		Object o=m("jo");
-		Json.Output j=o instanceof Json.Output?
-		(Json.Output)o
+		Output j=o instanceof Output?
+		(Output)o
 		:null;if(j==null)
-			m("jo",j=new Json.Output());
+			m("jo",j=new Output());
 		return j;}
-}//class TL
 
-public class Json{
+	public static void log(Object...s){logA(s);}
+	public static void error(Throwable x,Object...p){errorA(x,p);}
 
-public static void log(Object...s){logA(s);}
-public static void error(Throwable x,Object...p){errorA(x,p);}
+	public static void logA(Object[]s){try{
+		Output jo=TL.jo();
+		jo.clrSW();
+		for(Object t:s)jo.w(String.valueOf(t));
+		String t=jo.toStrin_();
+		//h.getServletContext().log(t);
+		System.out.println(t);//if(h.logOut)out.flush().w(h.comments[0]).w(t).w(h.comments[1]);
+		}catch(Exception ex){ex.printStackTrace();}}
 
-public static void logA(Object[]s){try{
-	Output jo=TL.jo();
-	jo.clrSW();
-	for(Object t:s)jo.w(String.valueOf(t));
-	String t=jo.toStrin_();
-	//h.getServletContext().log(t);
-	System.out.println(t);//if(h.logOut)out.flush().w(h.comments[0]).w(t).w(h.comments[1]);
-	}catch(Exception ex){ex.printStackTrace();}}
+	public static void errorA(Throwable x,Object[]p){try{
+		String s=TL.jo().clrSW().w("error:").o(p,x).toString();
+		//h.getServletContext().log(s);if(h.logOut)out.w(h.comments[0]//"\n/ *).w("error:").w(s.replaceAll("<", "&lt;")).w("\n---\n").o(x).w(h.comments[1] );
+		System.err.println(s);
+		if(x!=null)x.printStackTrace();
+		}catch(Exception ex){ex.printStackTrace();}}
 
-public static void errorA(Throwable x,Object[]p){try{
-	String s=TL.jo().clrSW().w("error:").o(p,x).toString();
-	//h.getServletContext().log(s);if(h.logOut)out.w(h.comments[0]//"\n/ *).w("error:").w(s.replaceAll("<", "&lt;")).w("\n---\n").o(x).w(h.comments[1] );
-	System.err.println(s);
-	if(x!=null)x.printStackTrace();
-	}catch(Exception ex){ex.printStackTrace();}}
-
-static Object[]a(Object...a){return a;}
-static List l(Object...a){List l=new LinkedList();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
-static Map m(Object...a){return ma(new HashMap(),a);}
-static Map m(Map m,Object...a){return ma(m,a);}
-static Map ma(Map m,Object[]a){
+	static Object[]a(Object...a){return a;}
+	static List l(Object...a){List l=new LinkedList();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
+	static Map m(Object...a){return ma(new HashMap(),a);}
+	static Map m(Map m,Object...a){return ma(m,a);}
+	static Map ma(Map m,Object[]a){
 	for(int i=0;i<a.length;i+=2)m.put(a[i],a[i+1]);
 	return m;}
 
@@ -74,7 +70,7 @@ static Map ma(Map m,Object[]a){
 		Map<Object, String> cache;
 		
 		public static void out(Object o,Writer w,boolean initCache,boolean includeObj)throws IOException
-		{Json.Output t=new Json.Output(w,initCache,includeObj);
+		{Output t=new Output(w,initCache,includeObj);
 			t.o(o);
 			if(t.cache!=null)
 			{t.cache.clear();t.cache=null;}
@@ -258,28 +254,28 @@ static Map ma(Map m,Object[]a){
 
 public static class Prsr {
 
- public StringBuilder buff=new StringBuilder() ,lookahead=new StringBuilder();
- public Reader rdr;public File f;public long fz,lm;public Object o;
+	public StringBuilder buff=new StringBuilder() ,lookahead=new StringBuilder();
+	public Reader rdr;public File f;public long fz,lm;public Object o;
 
-public String comments=null;
-public char c;Map<String,Object>cache=null;
+	public String comments=null;
+	public char c;Map<String,Object>cache=null;
 
-enum Literal{Undefined,Null};//,False,True
+	enum Literal{Undefined,Null};//,False,True
 
-public static Object parse(String p)throws Exception{
-	Prsr j=new Prsr();j.rdr=new java.io.StringReader(p);return j.parse();}
+	public static Object parse(String p)throws Exception{
+		Prsr j=new Prsr();j.rdr=new java.io.StringReader(p);return j.parse();}
 
-public static Object parseItem(Reader p)throws Exception{
-	Prsr j=new Prsr();j.rdr=p;return j.parseItem();}
+	public static Object parseItem(Reader p)throws Exception{
+		Prsr j=new Prsr();j.rdr=p;return j.parseItem();}
 
-public Object load(File f){
-	long l=(this.f=f).lastModified();
-	if( lm>=l)return o;
-	lm=l;fz=f.length();
-	try{rdr= new FileReader(f);
-		o=parse();
-	}catch(Exception ex){}
-	return o;}
+	public Object load(File f){
+		long l=(this.f=f).lastModified();
+		if( lm>=l)return o;
+		lm=l;fz=f.length();
+		try{rdr= new FileReader(f);
+			o=parse();
+		}catch(Exception ex){}
+		return o;}
 
  /**skip Redundent WhiteSpace*/void skipRWS(){
 	boolean b=Character.isWhitespace(c);
