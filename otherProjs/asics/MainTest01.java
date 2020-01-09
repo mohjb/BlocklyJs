@@ -1,5 +1,5 @@
 
-//{
+//{1503603665 yd81a3
 import java.net.URL;
 import java.net.URLConnection;//import java.net.HttpURLConnection;
 import java.util.Date;
@@ -129,7 +129,7 @@ static class Asic extends Json{
 
 }//class Asic
 
-class AsicsScanner  extends TL{
+class AsicsScanner  extends Json{
 	String prefix;int[]ports;long sleep;
 	List<Asic>asics=new LinkedList<Asic>();
 

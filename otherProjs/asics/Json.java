@@ -41,7 +41,7 @@ class Json extends Thread{
 	public static void error(Throwable x,Object...p){errorA(x,p);}
 
 	public static void logA(Object[]s){try{
-		Output jo=TL.jo();
+		Output jo=jo();
 		jo.clrSW();
 		for(Object t:s)jo.w(String.valueOf(t));
 		String t=jo.toStrin_();
@@ -50,7 +50,7 @@ class Json extends Thread{
 		}catch(Exception ex){ex.printStackTrace();}}
 
 	public static void errorA(Throwable x,Object[]p){try{
-		String s=TL.jo().clrSW().w("error:").o(p,x).toString();
+		String s=jo().clrSW().w("error:").o(p,x).toString();
 		//h.getServletContext().log(s);if(h.logOut)out.w(h.comments[0]//"\n/ *).w("error:").w(s.replaceAll("<", "&lt;")).w("\n---\n").o(x).w(h.comments[1] );
 		System.err.println(s);
 		if(x!=null)x.printStackTrace();
