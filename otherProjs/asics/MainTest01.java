@@ -1,16 +1,15 @@
-
 //{1503603665 yd81a3
-import java.net.URL;
-import java.net.URLConnection;//import java.net.HttpURLConnection;
 import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.nio.file.Files;
-import java.io.File;
+import java.text.SimpleDateFormat;
+import java.net.URL;
+import java.net.URLConnection;//import java.net.HttpURLConnection;
 //}
 
 public class MainTest01 extends Json{
@@ -52,7 +51,7 @@ MainTest01(){
 	if(global==null)sttc=global=this;
 	String prefix="192.168.8.";
 	int startPort= 141 ,endPort= 141 ,sleep=5000;
-	w(141+"/",global.now,"testW",".html","test");
+	w(141+"/",global.now=new Date(),"testW",".html","test");
 	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	scan.start();
 }
