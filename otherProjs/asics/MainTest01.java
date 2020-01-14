@@ -1,6 +1,7 @@
 //{1503603665 yd81a3
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.LinkedList;
 import java.io.File;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ static String dt2secs(Date d){
 
 static void w(String pf,Date now,String fn,String ext,String x){
 	try {
-		String p=baseDir+(pf!=null?pf:"")+dt2path(now);
+		String p=(baseDir.endsWith("/")?baseDir:baseDir+"/")+(pf!=null?pf:"")+dt2path(now);
 		File f=new File(p);
 		f.mkdirs();
 		Files.write(Paths.get(p,fn+dt2secs(now)+ext),x.getBytes());
@@ -64,13 +65,105 @@ static class Asic extends Json{
 	double[]tempr;int blocksFound;
 	State state=State.init;
 
+	interface Parse{public String parse(String p); }
+
+	static class Parse0 implements Parse{
+	@Override public String parse(String p) {return p;}}
+
+	static class ParseConfig implements Parse{
+	@Override public String parse(String p) {
+		int i0=p.indexOf("{"),i1=p.indexOf("};");
+		String r=p.substring(i0,i1+2);
+		return r;}
+	}
+
+	static class ParseStatus implements Parse{
+		@Override public String parse(String s) {
+			P p=new p();p.s=s;
+			p.len=s.length();
+			p.f=p.c=s.charAt(0)=='<'?new E():new N();
+			p.c.i=0;p.c.p();
+
+			Map m=new HashMap();
+			p.pTxt(m,0,null);
+			String r=jo().oMap(m);
+			return r;
+		}
+		static class P {
+			String s;int len;
+			N f,c;//first
+			class N{
+				N parentNode,nextSibling,previousSibling;
+				String x;
+				int i,j;//0:index-of start of textNode ; 1:index-of end-of-textNode 
+				//in-case-of element: 0:index-of '<' ; 1:index-of '>' ; 2:index-of '</' ; 3:index-of '>' ; 
+				void p(){
+					j=s.indexOf("<",i);
+					if(j==-1)j=len;else{
+						
+					}}
+			}
+			class E extends N{
+				N firstChild,lastChild;
+				String id;int ei,ej;
+				void p(){}
+			}
+			void pTxt(Map<K,V> p,int prevSiblingsCount,String id){
+				/*
+					html parser, looking for textNode and sub-tags, and attrib-id in tags
+				*/
+				if(id==null)id=String.valueOf(prevSiblingsCount);
+				prevSiblingsCount=0;
+				int ix=p.indeixOf("<",i);
+				String val=s.substring(i,ix==-1?len:ix);
+				while(ix==-1){
+					p.put(id, val);
+					if(s.charAt(ix+1)=='/'){
+						int j=s.indexOf('>',ix);
+						i=(j==-1?ix:j)+1;
+						return;
+					}
+					else{ i=ix;
+						pTag( p,prevSiblingsCount++);
+						ix=p.indeixOf("<",i);
+						val+=s.substring(i,ix==-1?len:ix);
+					}
+				}p.put(id, val);
+			}
+
+			Map pTag(Map p,int prevSiblingsCount){
+				int x=i,j=s.indexOf('>',i);
+				i=(j==-1?len:j)+1;
+				int idx=s.indexOf("id=", x),ide=s.indexOf('"', idx+4);
+				String id=idx==-1
+					?String.valueOf(prevSiblingsCount)
+					:s.substring(idx+4,ide);
+				if(idx!=-1){
+
+				}
+				
+				if(j!=-1&&'/'==s.charAt(j-1)){
+					return p;
+				}
+				return p;
+			}
+		}//class P
+
+	}//class ParseStatus
+
+	static Parse parse0=new Parse0()
+		,parseConfig=new ParseConfig()
+		,parseStatus=new ParseStatus();
+
 	enum State{init,detectAsic,invalidWallet,wallet,config,monitor};
-	enum Path{info("/cgi-bin/get_system_info.cgi")
-		,config("/cgi-bin/minerConfiguration.cgi")
-		,net("/cgi-bin/get_network_info.cgi")
-		,sys("")
-		,status("/cgi-bin/minerStatus.cgi");
-		String s;Path(String p){s=p;}}
+	enum Path{info("/cgi-bin/get_system_info.cgi",parse0)
+		,config("/cgi-bin/minerConfiguration.cgi",parseConfig)
+		,net("/cgi-bin/get_network_info.cgi",parse0)//,sys("")
+		,status("/cgi-bin/minerStatus.cgi",parseStatus);
+		String s;Parse parse;
+		Path(String p,Parse prse){
+			s=p;parse=prse;}
+	}
 
 	public void f(Path p)throws Exception{
 		URL url = new URL(base,p.s);
@@ -85,7 +178,7 @@ static class Asic extends Json{
 			sb.append(charArray, 0, numCharsRead);
 		String result = sb.toString();
 		//TODO: implement parsing Path.info result string
-		w(ip+"/",global.now,p.toString(),".html",result);
+		w(ip+"/",global.now,p.toString(),".html",p.parse(result));
 	}
 
 	public void startScan()throws Exception{
