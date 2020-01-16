@@ -51,9 +51,14 @@ MainTest01(){
 	if(global==null)sttc=global=this;
 	String prefix="192.168.8.";
 	int startPort= 141 ,endPort= 141 ,sleep=5000;
-	w(141+"/",global.now=new Date(),"testW",".html","test");
-	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
+	String src=Files.readString(Paths.get(
+		"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+		,"status.22.713..html"));
+	String result=	AsicsScanner.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
+	//Asic a=new Asic();//scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	//scan.start();
+	
+	w("/"+258+"/",global.now=new Date(),"test-ParseStatus",".json",result);
 }
 
 static class Asic extends Json{
