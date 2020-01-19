@@ -1,4 +1,4 @@
-//{1503603665 yd81a3
+//{
 import java.io.IOException;
 import java.util.*;
 import java.io.File;
@@ -131,7 +131,7 @@ static class Asic extends Json{
 			N(E p){
 				parentNode=p;
 				N n=p.lastChild;
-				i=ix<doc.end&&doc.x.charAt(ix)=='>'?ix+1:ix;//c.end==0?0:c.end+1;//p.head==0?0:p.head+1;;//c.end<doc.end&&doc.x.charAt(c.end)=='>'?c.end+1:c.end;//c.end==0?0:c.end+1;//p.head==0?0:p.head+1;
+				i=ix;//<doc.end&&doc.x.charAt(ix)=='>'?ix+1:ix;//c.end==0?0:c.end+1;//p.headEnd==0?0:p.headEnd+1;;//c.end<doc.end&&doc.x.charAt(c.end)=='>'?c.end+1:c.end;//c.end==0?0:c.end+1;//p.headEnd==0?0:p.headEnd+1;
 				if(n!=null)
 					n.nextSibling=this;
 				previousSibling=n;
@@ -154,64 +154,69 @@ static class Asic extends Json{
 
 		class E extends N{
 			N firstChild,lastChild;String id;
-			/**i=indexOf('<') head=indexOf('>',i) close=indexOf('<',head) end=indexOf('>',close)*/
-			int head,close;
+			/**i=indexOf('<') headEnd=indexOf('>',i) close=indexOf('<',headEnd) end=indexOf('>',close)*/
+			int headEnd,close;
 			E(E p){super(p);}
 			E(String s){super();
 				c=doc=this;
 				x=s;
-				ix=i=head=0;
+				ix=i=headEnd=0;
 				end=close=s.length();
 			}
 
 			N parse(){
-				head=close=end=doc.x.indexOf(">",i);
+				headEnd=close=end=doc.x.indexOf(">",i);
 				char ch=doc.x.charAt(i+1);
 				if(ch=='?' || ch=='!'){
-					if(ch=='!' && doc.x.substring(i+2, i+4).equals("--")){
-						head=close=doc.x.indexOf("-->",i+6);
-						ix=end=close+2;
-					}
+					if(ch=='!' && //doc.x.substring(i+2, i+4).equals("--")
+						doc.x.charAt(i+2)=='-'&&
+						doc.x.charAt(i+3)=='-'
+					){
+						headEnd=close=doc.x.indexOf("-->",i+6);
+						ix=(end=close+2)+1;
+					}ix=end;
 					x=doc.x.substring(i,end);
 					return this;
 				}
 				if(end==-1)
-				{	ix=head=close=end=doc.end;
+				{	ix=headEnd=close=end=doc.end;
 					return this;
-				}
+				}ix=++end;
 				int e =doc.x.indexOf(" ",i)
 					,d=doc.x.indexOf("id=\"",e)
 					,q=d>end||d==-1?d:doc.x.indexOf("\"",d+4);
 				x=doc.x.substring(i+1,e);
 				id=d==-1?null:doc.x.substring(d+4,q);
-				e=head;
-				if(doc.x.charAt(head-1)=='/')
-					close=head-1;           //leaf
+				e=headEnd;
+				if(doc.x.charAt(headEnd-1)=='/')
+					close=headEnd-1;           //leaf
 				else do{
 					e =doc.x.indexOf('<',d=e);
 					if(e==-1){
-						if(head<(ix=end=doc.end))
+						if(headEnd<(ix=end=doc.end))
 							new N(this,d,doc.end);
 					}else {
-						if ( e > d+1 )//head + 1
+						if ( e > d+1 )//headEnd + 1
 							new N( this ,e);
 						if ( doc.x.charAt( e + 1 ) == '/' ) {
 							ix=end = close = e;
 							c = this;
-							e += d = x.length();
+							e += x.length();
 							if ( x.equalsIgnoreCase( doc.x.substring( end + 2, e ) ) ) {
 								ix=end = doc.x.indexOf( ">", e );
 								if ( end == -1 )
 									ix=end = doc.end;
-								return this;
+								else
+									ix++;
 							}
+							return this;
 						}else{
 							E x=new E(this);
 							x.parse();
 							e=x.end;
 						}
 					}
-				}while(e!=-1 );
+				}while(e!=-1 && e<doc.end);
 				return this;
 			}//parse
 
