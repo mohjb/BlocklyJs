@@ -44,21 +44,24 @@ public static void main(String[]args){
  try{baseDir=new File("./output/").getCanonicalPath();
 
 	new MainTest01();}catch(Exception e){
-		error(e,"main");}
+		Json.error(e,"main");}
 }//main 
 
-MainTest01(){
+MainTest01(){try {
 	if(global==null)sttc=global=this;
 	String prefix="192.168.8.";
 	int startPort= 141 ,endPort= 141 ,sleep=5000;
 	String src=Files.readString(Paths.get(
 		"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
 		,"status.22.713..html"));
-	String result=	AsicsScanner.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
+	String result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
 	//Asic a=new Asic();//scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	//scan.start();
 	
 	w("/"+258+"/",global.now=new Date(),"test-ParseStatus",".json",result);
+} catch (Exception e) {
+	error(e, "MainTest01.<init>");
+}
 }
 
 static class Asic extends Json{
@@ -275,7 +278,7 @@ static class Asic extends Json{
 			,",blocksFound:",blocksFound
 			,",state:\"",state,"\"}")
 		.toStrin_();}catch(Exception ex){
-			error(ex,"Asic.toJson");}
+			Json.error(ex,"Asic.toJson");}
 		return t;}
 
 	public String toString(){return toJson();}
