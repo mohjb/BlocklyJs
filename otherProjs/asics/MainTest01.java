@@ -47,13 +47,23 @@ public static void main(String[]args){
 		Json.error(e,"main");}
 }//main 
 
-MainTest01(){try {
+String fileString(String pth,String fn){
+String src="";try {
+	byte[]ba=Files.readAllBytes(//readString(
+		Paths.get(pth,fn));
+	src=new String(ba);
+} catch (Exception e) {
+	error(e, "fileString");
+}
+	return src;
+}
+
+MainTest01(){try{
 	if(global==null)sttc=global=this;
-	String prefix="192.168.8.";
-	int startPort= 141 ,endPort= 141 ,sleep=5000;
-	String src=Files.readString(Paths.get(
-		"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
-		,"status.22.713..html"));
+	//String prefix="192.168.8.";int startPort= 141 ,endPort= 141 ,sleep=5000;
+	String src=fileString(//"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+	"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+	,"status.22.713..html");
 	String result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
 	//Asic a=new Asic();//scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	//scan.start();
@@ -88,7 +98,7 @@ static class Asic extends Json{
 		@Override public String parse(String s) {
 			String r="";try{
 				ParseStatus p=new ParseStatus(s);
-				Map m=p.m(p.doc);
+				Map<String,Object> m=p.m(p.doc);
 				r=Json.jo().clrSW().oMap(m,"","").toStrin_();
 			}catch ( IOException x ){}
 			return r;
@@ -111,7 +121,7 @@ static class Asic extends Json{
 		}
 
 		//static class P extends E{
-		E doc;N c;
+		E doc;N c;int ix=0;
 
 		class N{
 			N parentNode,nextSibling,previousSibling;
@@ -121,7 +131,7 @@ static class Asic extends Json{
 			N(E p){
 				parentNode=p;
 				N n=p.lastChild;
-				i=c.end<doc.end&&doc.x.charAt(c.end)=='>'?c.end+1:c.end;//c.end==0?0:c.end+1;//p.head==0?0:p.head+1;
+				i=ix<doc.end&&doc.x.charAt(ix)=='>'?ix+1:ix;//c.end==0?0:c.end+1;//p.head==0?0:p.head+1;;//c.end<doc.end&&doc.x.charAt(c.end)=='>'?c.end+1:c.end;//c.end==0?0:c.end+1;//p.head==0?0:p.head+1;
 				if(n!=null)
 					n.nextSibling=this;
 				previousSibling=n;
@@ -132,11 +142,11 @@ static class Asic extends Json{
 			}
 			N(E p,int separator){
 				this(p);if(separator!=-1)
-					x=doc.x.substring(i,separator);
+					x=doc.x.substring(i,ix=separator);
 			}
 			N(E p,int start,int separator){
 				this(p);i=start;end=separator;if(separator!=-1)
-					x=doc.x.substring(i,separator);
+					x=doc.x.substring(i,ix=separator);
 			}
 
 			N parse(){return this;}//parse
@@ -150,64 +160,74 @@ static class Asic extends Json{
 			E(String s){super();
 				c=doc=this;
 				x=s;
-				i=head=0;
+				ix=i=head=0;
 				end=close=s.length();
 			}
 
 			N parse(){
 				head=close=end=doc.x.indexOf(">",i);
+				char ch=doc.x.charAt(i+1);
+				if(ch=='?' || ch=='!'){
+					if(ch=='!' && doc.x.substring(i+2, i+4).equals("--")){
+						head=close=doc.x.indexOf("-->",i+6);
+						ix=end=close+2;
+					}
+					x=doc.x.substring(i,end);
+					return this;
+				}
 				if(end==-1)
-					head=close=end=doc.end;
-				else {
-					int e =doc.x.indexOf(" ",i)
-						,d=doc.x.indexOf("id=\"",e)
-						,q=d>end||d==-1?d:doc.x.indexOf("\"",d+4);
-					x=doc.x.substring(i+1,e);
-					id=d==-1?null:doc.x.substring(d+4,q);
-					e=head;
-					if(doc.x.charAt(head-1)=='/')
-						close=head-1;           //leaf
-					else do{
-						e =doc.x.indexOf('<',d=e);
-						if(e==-1){
-							if(head<(end=doc.end))
-								new N(this,d,doc.end);
-						}else {
-							if ( e > d+1 )//head + 1
-								new N( this ,e);
-							if ( doc.x.charAt( e + 1 ) == '/' ) {
-								end = close = e;
-								c = this;
-								e += d = x.length();
-								if ( x.equalsIgnoreCase( doc.x.substring( end + 2, e ) ) ) {
-									end = doc.x.indexOf( ">", e );
-									if ( end == -1 )
-										end = doc.end;
-									return this;
-								}
-							}else{
-								E x=new E(this);
-								x.parse();
-								e=x.end;
+				{	ix=head=close=end=doc.end;
+					return this;
+				}
+				int e =doc.x.indexOf(" ",i)
+					,d=doc.x.indexOf("id=\"",e)
+					,q=d>end||d==-1?d:doc.x.indexOf("\"",d+4);
+				x=doc.x.substring(i+1,e);
+				id=d==-1?null:doc.x.substring(d+4,q);
+				e=head;
+				if(doc.x.charAt(head-1)=='/')
+					close=head-1;           //leaf
+				else do{
+					e =doc.x.indexOf('<',d=e);
+					if(e==-1){
+						if(head<(ix=end=doc.end))
+							new N(this,d,doc.end);
+					}else {
+						if ( e > d+1 )//head + 1
+							new N( this ,e);
+						if ( doc.x.charAt( e + 1 ) == '/' ) {
+							ix=end = close = e;
+							c = this;
+							e += d = x.length();
+							if ( x.equalsIgnoreCase( doc.x.substring( end + 2, e ) ) ) {
+								ix=end = doc.x.indexOf( ">", e );
+								if ( end == -1 )
+									ix=end = doc.end;
+								return this;
 							}
+						}else{
+							E x=new E(this);
+							x.parse();
+							e=x.end;
 						}
-					}while(e!=-1 );
-				}return this;
+					}
+				}while(e!=-1 );
+				return this;
 			}//parse
 
 		}//class E
 
 		//}//class P
 
-		Map m(E e){Map m =new HashMap();
+		Map<String,Object> m(E e){Map<String,Object> m =new HashMap<String,Object>();
 			N n=e.firstChild;
 			int i=0;
 			while(n!=null){
 				if(n instanceof E){
 					E x=(E)n;
-					m.put( x.id==null?i:x.id,m(x) );
+					m.put( x.id==null?String.valueOf(i):x.id,m(x) );
 				}
-				else m.put(i,n.x);
+				else m.put(String.valueOf(i),n.x);
 				n=n.nextSibling;
 				i++;
 			}
@@ -278,7 +298,7 @@ static class Asic extends Json{
 			,",blocksFound:",blocksFound
 			,",state:\"",state,"\"}")
 		.toStrin_();}catch(Exception ex){
-			Json.error(ex,"Asic.toJson");}
+			error(ex,"Asic.toJson");}
 		return t;}
 
 	public String toString(){return toJson();}

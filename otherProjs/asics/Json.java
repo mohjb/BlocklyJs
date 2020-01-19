@@ -1,7 +1,7 @@
 //{
 import java.io.Writer;
 import java.io.IOException;
-import java.io.InputStream;
+//import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.File;
@@ -11,7 +11,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.lang.reflect.Method;
-import java.net.URL;//import java.lang.reflect.Field;//import java.net.URLConnection;import java.net.HttpURLConnection;//import java.util.Base64;// Java 8
+//import java.net.URL;//import java.lang.reflect.Field;//import java.net.URLConnection;import java.net.HttpURLConnection;//import java.util.Base64;// Java 8
 import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
@@ -23,12 +23,12 @@ import java.util.Date;
 //}
 
 class Json extends Thread{
-	Map m;//Connection dbc; used mainly for DB , jo
+	Map<Object,Object> m;//Connection dbc; used mainly for DB , jo
 	static Json sttc;
 	static Json tl(){Thread t=Thread.currentThread();return t instanceof Json?(Json)t:sttc;}
 	static Object m(Object k){Json tl=tl();Object o=tl.m==null?null:tl.m.get(k);return o;}
 	static Object m(Object k,Object v){
-		Json tl=tl();if(tl.m==null)tl.m=new HashMap();tl.m.put(k,v);return v;}
+		Json tl=tl();if(tl.m==null)tl.m=new HashMap<Object,Object>();tl.m.put(k,v);return v;}
 	static Output jo(){
 		Object o=m("jo");
 		Output j=o instanceof Output?
@@ -57,10 +57,10 @@ class Json extends Thread{
 		}catch(Exception ex){ex.printStackTrace();}}
 
 	static Object[]a(Object...a){return a;}
-	static List l(Object...a){List l=new LinkedList();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
-	static Map m(Object...a){return ma(new HashMap(),a);}
-	static Map m(Map m,Object...a){return ma(m,a);}
-	static Map ma(Map m,Object[]a){
+	static List<Object> l(Object...a){List<Object>l=new LinkedList<Object>();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
+	static Map<Object,Object> m(Object...a){return ma(new HashMap<Object,Object>(),a);}
+	static Map<Object,Object> m(Map<Object,Object> m,Object...a){return ma(m,a);}
+	static Map<Object,Object> ma(Map<Object,Object> m,Object[]a){
 	for(int i=0;i<a.length;i+=2)m.put(a[i],a[i+1]);
 	return m;}
 
@@ -165,7 +165,7 @@ class Json extends Thread{
 				oStr(sw.toString(),indentation);}catch(Exception ex)
 			{log("Json.Output.x("+x+"):",ex);}return w("}");}
 
-		public Output oEnumrtn(Enumeration a,String ind,String path)throws IOException
+		public Output oEnumrtn(Enumeration<Object> a,String ind,String path)throws IOException
 		{final boolean c=comment;
 			if(a==null)return c?w(" null //Enumeration\n").p(ind):w("null");
 			boolean comma=false;String i2=c?ind+"\t":ind;
@@ -175,7 +175,7 @@ class Json extends Thread{
 				o(a.nextElement(),i2,c?path+(i++):path);}
 			return c?w("]//Enumeration&cachePath=\"").p(path).w("\"\n").p(ind):w("]");}
 
-		public Output oItrtr(Iterator a,String ind,String path)throws IOException
+		public Output oItrtr(Iterator<Object> a,String ind,String path)throws IOException
 		{final boolean c=comment;if(a==null)return c?w(" null //Iterator\n").p(ind):w("null");
 			boolean comma=false;String i2=c?ind+"\t":ind;
 			if(c){w("[//").p(a.toString()).w(" : Itrtr\n").p(ind);
@@ -202,14 +202,14 @@ class Json extends Thread{
 			for(int i=0;i<n;i++){if(i>0)w(" , ");o( java.lang.reflect.Array.get(a,i),i2,c?path+i:path);}
 			return c?w("]//cachePath=\"").p(path).w("\"\n").p(ind):w("]");}
 
-		public Output oCollctn(Collection o,String ind,String path)throws IOException
+		public Output oCollctn(Collection<Object> o,String ind,String path)throws IOException
 		{if(o==null)return w("null");final boolean c=comment;
 			if(c){w("[//").p(o.getClass().getName()).w(":Collection:size=").p(o.size()).w("\n").p(ind);
 				if(cache==null&&initCache)cache=new HashMap<Object, String>();
 				if(cache!=null)cache.put(o,path);
 				if(c&&path==null)path="";if(c&&path.length()>0)path+=".";
 			}else w("[");
-			Iterator e=o.iterator();int i=0;
+			Iterator<Object> e=o.iterator();int i=0;
 			if(e.hasNext()){o(e.next(),ind,c?path+(i++):path);
 				while(e.hasNext()){w(",");o(e.next(),ind,c?path+(i++):path);}}
 			return c?w("]//").p(o.getClass().getName()).w("&cachePath=\"").p(path).w("\"\n").p(ind) :w("]");}
@@ -299,7 +299,7 @@ public static class Prsr {
  public Object parse()throws Exception{
 	Object r=c!='\0'?parseItem():null;
 	skipWhiteSpace();if(c!='\0')
-	{LinkedList l=new LinkedList();l.add(r);
+	{LinkedList<Object> l=new LinkedList<Object>();l.add(r);
 	 while(c!='\0'){
 		r=parseItem();
 		l.add(r);
@@ -314,7 +314,7 @@ public static class Prsr {
 	case '5':case '6':case '7':case '8':case '9':
 	case '-':case '+':case '.':r=extractDigits();break;
 	case '[':r=extractArray();break;
-	case '{':Map m=extractObject();
+	case '{':Map <Object,Object>m=extractObject();
 		r=m==null?null:m.get("class");
 		if("date".equals(r)){r=m.get("time");
 			r=new Date(((Number)r).longValue());}
@@ -347,7 +347,7 @@ public static class Prsr {
 		skipWhiteSpace();
 		if(c==')')
 			nxt();
-		else{LinkedList l=new LinkedList();
+		else{LinkedList<Object>l=new LinkedList<Object>();
 			l.add(r);
 			while(c!=')' && c!='\0'){
 				r=parseItem();
