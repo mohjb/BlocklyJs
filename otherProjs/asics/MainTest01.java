@@ -61,8 +61,9 @@ String src="";try {
 MainTest01(){try{
 	if(global==null)sttc=global=this;
 	//String prefix="192.168.8.";int startPort= 141 ,endPort= 141 ,sleep=5000;
-	String src=fileString(//"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
-	"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+	String src=fileString(
+		"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+	//"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
 	,"status.22.713..html");
 	String result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
 	//Asic a=new Asic();//scan=new AsicsScanner(prefix, startPort, endPort, sleep);
@@ -121,7 +122,7 @@ static class Asic extends Json{
 		}
 
 		//static class P extends E{
-		E doc;N c;int ix=0;
+		E doc;N c;int ix=0;Map ids=Json.m();
 
 		class N{
 			N parentNode,nextSibling,previousSibling;
@@ -142,11 +143,11 @@ static class Asic extends Json{
 			}
 			N(E p,int separator){
 				this(p);if(separator!=-1)
-					x=doc.x.substring(i,ix=separator);
+					x=doc.x.substring(doc.x.charAt(i)=='>'?i+1:i,ix=separator);
 			}
 			N(E p,int start,int separator){
 				this(p);i=start;end=separator;if(separator!=-1)
-					x=doc.x.substring(i,ix=separator);
+					x=doc.x.substring(doc.x.charAt(i)=='>'?i+1:i,ix=separator);
 			}
 
 			N parse(){return this;}//parse
@@ -164,17 +165,16 @@ static class Asic extends Json{
 				end=close=s.length();
 			}
 
-			N parse(){
+			N parse(){//if(doc.x.charAt(i)!='<')i=doc.x.indexOf('<');
 				headEnd=close=end=doc.x.indexOf(">",i);
 				char ch=doc.x.charAt(i+1);
 				if(ch=='?' || ch=='!'){
 					if(ch=='!' && //doc.x.substring(i+2, i+4).equals("--")
 						doc.x.charAt(i+2)=='-'&&
 						doc.x.charAt(i+3)=='-'
-					){
-						headEnd=close=doc.x.indexOf("-->",i+6);
+					){	headEnd=close=doc.x.indexOf("-->",i+6);
 						ix=(end=close+2)+1;
-					}ix=end;
+					}else ix=end;
 					x=doc.x.substring(i,end);
 					return this;
 				}
@@ -183,25 +183,43 @@ static class Asic extends Json{
 					return this;
 				}ix=++end;
 				int e =doc.x.indexOf(" ",i)
-					,d=doc.x.indexOf("id=\"",e)
-					,q=d>end||d==-1?d:doc.x.indexOf("\"",d+4);
-				x=doc.x.substring(i+1,e);
-				id=d==-1?null:doc.x.substring(d+4,q);
-				e=headEnd;
+					,d=e==-1?(e=doc.end):doc.x.indexOf("id=\"",e)
+					,q=d>end||d==-1?(d=doc.end):doc.x.indexOf("\"",d+4);
+				x=doc.x.substring(i+1,e>headEnd?(e=headEnd):e);
+				if(d!=-1&&q!=-1&&q>=d+4)//id=d==-1||q==-1||q<d+4?null:doc.x.substring(d+4,q);
+				{	id=doc.x.substring(d+4,q);
+					Object o=ids.get(id);
+					if(o==null){
+						ids.put(id, this);
+						System.out.println(
+							"ParseStatus:html-parser:element.id="+id);}
+					else{
+						boolean b=o instanceof List;
+						List l=b?(List)o:Json.l(o);
+						l.add(this);
+						if(!b){
+							ids.put(id,l);
+							System.out.println(
+								"ParseStatus:html-parser:id="+id+
+								" : created-list------------------------");
+						}else System.out.println(
+							"ParseStatus:html-parser:id="+id+" : addTo-list:ListLen="+l.size());
+					}
+				}e=headEnd;//check x == script , pre, textarea
 				if(doc.x.charAt(headEnd-1)=='/')
 					close=headEnd-1;           //leaf
 				else do{
-					e =doc.x.indexOf('<',d=e);
+					e =doc.x.indexOf('<',d=ix);//d=e
 					if(e==-1){
 						if(headEnd<(ix=end=doc.end))
 							new N(this,d,doc.end);
 					}else {
-						if ( e > d+1 )//headEnd + 1
+						if ( e > d )//headEnd + 1
 							new N( this ,e);
 						if ( doc.x.charAt( e + 1 ) == '/' ) {
 							ix=end = close = e;
 							c = this;
-							e += x.length();
+							e += x.length()+2;
 							if ( x.equalsIgnoreCase( doc.x.substring( end + 2, e ) ) ) {
 								ix=end = doc.x.indexOf( ">", e );
 								if ( end == -1 )
@@ -213,13 +231,26 @@ static class Asic extends Json{
 						}else{
 							E x=new E(this);
 							x.parse();
-							e=x.end;
+							e=ix;//x.end;
 						}
 					}
 				}while(e!=-1 && e<doc.end);
 				return this;
 			}//parse
 
+
+			String txt(){return txt(new StringBuffer()).toString();}
+			StringBuffer txt(StringBuffer b){
+				N n=firstChild;
+				while(n!=null){
+					if(n instanceof E)
+						((E)n).txt(b);
+					else
+						b.append(x.trim());
+					n=n.nextSibling;
+				}
+				return b;
+			}
 		}//class E
 
 		//}//class P
