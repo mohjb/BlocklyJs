@@ -4,3 +4,4 @@ otherProjs/asics/package.json
 otherProjs/asics/package-lock.json
 *.class
 .vscode/settings.json
+otherProjs/asics/Main.java

@@ -57,7 +57,7 @@ class Json extends Thread{
 		}catch(Exception ex){ex.printStackTrace();}}
 
 	static Object[]a(Object...a){return a;}
-	static List<Object> l(Object...a){List<Object>l=new LinkedList<Object>();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
+	static List<Object> l(Object...a){List<Object>l=new LinkedList<Object>();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}//static List<T>l<T>(T...a){List<T>l=new LinkedList<T>();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
 	static Map<Object,Object> m(Object...a){return ma(new HashMap<Object,Object>(),a);}
 	static Map<Object,Object> m(Map<Object,Object> m,Object...a){return ma(m,a);}
 	static Map<Object,Object> ma(Map<Object,Object> m,Object[]a){

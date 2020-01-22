@@ -62,8 +62,8 @@ MainTest01(){try{
 	if(global==null)sttc=global=this;
 	//String prefix="192.168.8.";int startPort= 141 ,endPort= 141 ,sleep=5000;
 	String src=fileString(
-		"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
-	//"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+		//"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
+		"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
 	,"status.22.713..html");
 	String result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
 	//Asic a=new Asic();//scan=new AsicsScanner(prefix, startPort, endPort, sleep);
@@ -99,139 +99,176 @@ static class Asic extends Json{
 		@Override public String parse(String s) {
 			String r="";try{
 				ParseStatus p=new ParseStatus(s);
-				Map<String,Object> m=p.m(p.doc);
-				r=Json.jo().clrSW().oMap(m,"","").toStrin_();
-			}catch ( IOException x ){}
+				r=Json.jo().clrSW().oMap(p.ids,"","").toStrin_();
+			}catch ( IOException x ){
+				error(x,"Asic.ParseStatus.parse");}
 			return r;
 		}//parse
 
 		ParseStatus(String s){
 			if(s==null)return;
-			doc=new E(s);
-			int i=s.indexOf('<');
-			doc.firstChild=doc.lastChild=
-				i==0?new E(doc):new N(doc,i);
-			if(i==0)c.parse();	//if(i>0)new E(doc).parse();
-			while(c.end<doc.end){
-				int j=c.end;
-				i=s.indexOf('<',j);
-				boolean b=i-j<2 &&i>=0;
-				c=b?new E(doc):new N(doc,j,i);
-				if(b)c.parse();
-			}
+			ids=new HashMap<String,Object>();
+			doc=new Elem(s);
 		}
 
 		//static class P extends E{
-		E doc;N c;int ix=0;Map ids=Json.m();
+			/**
+			 * doc.txt is the source html-text
+			 * doc.i is the current-index of parsing,previously (ix)
+			 * doc.headEnd is indexOf "id=\"" ,previously (idix)
+			 * doc.nextSibling was previously (parseStatus.c)
+			 */
+		Elem doc;Map<String,Object>ids;
 
-		class N{
-			N parentNode,nextSibling,previousSibling;
-			String x;int i,end;//i:index-of start of textNode ; end:index-of end-of-textNode
+		/**TextNode of a HTML-TreeNode*/
+		class Nd{
+			Nd nextSibling,previousSibling;
+			Elem parentNode;
+			/** is the source html-text */
+			String txt;
 
-			N(){c=this;}
-			N(E p){
+			/**i:index-of start of textNode ; end:index-of end-of-textNode */
+			int i,end;
+
+			Nd(){doc.nextSibling=this;}
+			Nd(Elem p){
 				parentNode=p;
-				N n=p.lastChild;
-				i=ix;//<doc.end&&doc.x.charAt(ix)=='>'?ix+1:ix;//c.end==0?0:c.end+1;//p.headEnd==0?0:p.headEnd+1;;//c.end<doc.end&&doc.x.charAt(c.end)=='>'?c.end+1:c.end;//c.end==0?0:c.end+1;//p.headEnd==0?0:p.headEnd+1;
+				Nd n=p.lastChild;
+				i=doc.i;//<doc.end&&doc.x.charAt(doc.i)=='>'?doc.i+1:doc.i;//c.end==0?0:c.end+1;//p.headEnd==0?0:p.headEnd+1;;//c.end<doc.end&&doc.x.charAt(c.end)=='>'?c.end+1:c.end;//c.end==0?0:c.end+1;//p.headEnd==0?0:p.headEnd+1;
 				if(n!=null)
 					n.nextSibling=this;
 				previousSibling=n;
 				p.lastChild=this;
 				if(p.firstChild==null)
 					p.firstChild=this;
-				c=this;
+				doc.nextSibling=this;
 			}
-			N(E p,int separator){
-				this(p);if(separator!=-1)
-					x=doc.x.substring(doc.x.charAt(i)=='>'?i+1:i,ix=separator);
-			}
-			N(E p,int start,int separator){
+			Nd(Elem p,int separator){this(p,doc.i,separator);}
+			Nd(Elem p,int start,int separator){
 				this(p);i=start;end=separator;if(separator!=-1)
-					x=doc.x.substring(doc.x.charAt(i)=='>'?i+1:i,ix=separator);
+					txt=sub(chr(i)=='>'?i+1:i,doc.i=separator);
 			}
 
-			N parse(){return this;}//parse
-		}//class N
+			Nd parse(){return this;}//parse
 
-		class E extends N{
-			N firstChild,lastChild;String id;
+			
+			int fnd(String p,int from){
+				int t=ixOf(p,from);
+				if(t==-1)
+					t=doc.end;
+				return t;}
+
+			int ixOf(String p,int from){
+				int t=doc.txt.indexOf(p,from);
+				return t;}
+
+			String sub(int from,int to){
+				String t=doc.txt.substring(from,to);
+				return t;}
+
+			char chr(int x){
+				char t=doc.txt.charAt(x);
+				return t;}
+
+		}//class Nd
+
+		/**Element or TagNode of a HTML-TreeNode, or comment, or frag, basically anything that starts with a &lt; */
+		class Elem extends Nd{
+			Nd firstChild,lastChild;String id;
 			/**i=indexOf('<') headEnd=indexOf('>',i) close=indexOf('<',headEnd) end=indexOf('>',close)*/
 			int headEnd,close;
-			E(E p){super(p);}
-			E(String s){super();
-				c=doc=this;
-				x=s;
-				ix=i=headEnd=0;
+			Elem(Elem p){super(p);}
+			Elem(String s){super();
+				nextSibling=doc=this;
+				txt=s;
+				doc.i=i=headEnd=0;
 				end=close=s.length();
+
+				int iz=s.indexOf('<');
+				headEnd=s.indexOf("id=\"");
+
+				firstChild=lastChild=
+					iz==0?new Elem(doc):new Nd(doc,iz);
+				if(iz==0)nextSibling.parse();
+				while(nextSibling.end<end){//int j=c.end;
+					iz=s.indexOf('<',i);
+					boolean b=iz-i<2 &&iz>=0;
+					nextSibling=b?new Elem(doc):new Nd(doc,i,iz);
+					if(b)nextSibling.parse();
+				}
 			}
 
-			N parse(){//if(doc.x.charAt(i)!='<')i=doc.x.indexOf('<');
-				headEnd=close=end=doc.x.indexOf(">",i);
-				char ch=doc.x.charAt(i+1);
+			Nd parse(){
+				headEnd=close=end=ixOf(">",i);
+				char ch=chr(i+1);
 				if(ch=='?' || ch=='!'){
-					if(ch=='!' && //doc.x.substring(i+2, i+4).equals("--")
-						doc.x.charAt(i+2)=='-'&&
-						doc.x.charAt(i+3)=='-'
-					){	headEnd=close=doc.x.indexOf("-->",i+6);
-						ix=(end=close+2)+1;
-					}else ix=end;
-					x=doc.x.substring(i,end);
+					if( ch=='!'
+					 && chr(i+2)=='-'
+					 && chr(i+3)=='-'
+					){	headEnd=close=ixOf("-->",i+6);
+						doc.i=(end=close+2)+1;
+					}else doc.i=end;
+					txt=sub(i,end);
 					return this;
 				}
 				if(end==-1)
-				{	ix=headEnd=close=end=doc.end;
+				{	doc.i=headEnd=close=end=doc.end;
 					return this;
-				}ix=++end;
-				int e =doc.x.indexOf(" ",i)
-					,d=e==-1?(e=doc.end):doc.x.indexOf("id=\"",e)
-					,q=d>end||d==-1?(d=doc.end):doc.x.indexOf("\"",d+4);
-				x=doc.x.substring(i+1,e>headEnd?(e=headEnd):e);
+				}doc.i=++end;
+				int e =fnd(" ",i);
+				txt=sub(i+1,e>headEnd?(e=headEnd):e);
+				int d=doc.headEnd<end?doc.headEnd:doc.end
+					,q=d>end?d:ixOf("\"",d+4);
+				if(d==doc.headEnd)
+					doc.headEnd=fnd("id=\"",close);
 				if(d!=-1&&q!=-1&&q>=d+4)//id=d==-1||q==-1||q<d+4?null:doc.x.substring(d+4,q);
-				{	id=doc.x.substring(d+4,q);
+				{	id=sub(d+4,q);
 					Object o=ids.get(id);
 					if(o==null){
 						ids.put(id, this);
-						System.out.println(
-							"ParseStatus:html-parser:element.id="+id);}
+						System.out.println("ParseStatus:html-parser@"+doc.i+" :id="+id);
+					}
 					else{
 						boolean b=o instanceof List;
-						List l=b?(List)o:Json.l(o);
-						l.add(this);
-						if(!b){
-							ids.put(id,l);
-							System.out.println(
-								"ParseStatus:html-parser:id="+id+
-								" : created-list------------------------");
-						}else System.out.println(
-							"ParseStatus:html-parser:id="+id+" : addTo-list:ListLen="+l.size());
+						List<Elem>l=b?(List<Elem>)o:null;
+						if(b){
+							l.add(this);
+							System.out.println("ParseStatus:html-parser@"+doc.i+" :id="+id+": addTo-list:ListLen="+l.size());
+						}
+						else{
+							ids.put(id,l=new LinkedList<Elem>());
+							l.add((Elem)o);
+							l.add(this);
+							System.out.println("ParseStatus:html-parser@"+doc.i+" :id="+id+" : created-list------------------------");
+						}
 					}
 				}e=headEnd;//check x == script , pre, textarea
-				if(doc.x.charAt(headEnd-1)=='/')
+				if(chr(headEnd-1)=='/')
 					close=headEnd-1;           //leaf
 				else do{
-					e =doc.x.indexOf('<',d=ix);//d=e
+					e =ixOf('<',d=doc.i);//d=e
 					if(e==-1){
-						if(headEnd<(ix=end=doc.end))
-							new N(this,d,doc.end);
+						if(headEnd<(doc.i=end=doc.end))
+							new Nd(this,d,doc.end);
 					}else {
 						if ( e > d )//headEnd + 1
-							new N( this ,e);
-						if ( doc.x.charAt( e + 1 ) == '/' ) {
-							ix=end = close = e;
+							new Nd( this ,e);
+						if ( chr( e + 1 ) == '/' ) {
+							doc.i=end = close = e;
 							c = this;
-							e += x.length()+2;
-							if ( x.equalsIgnoreCase( doc.x.substring( end + 2, e ) ) ) {
-								ix=end = doc.x.indexOf( ">", e );
+							e += txt.length()+2;
+							if ( txt.equalsIgnoreCase( sub( end + 2, e ) ) ) {
+								doc.i=end = ixOf( ">", e );
 								if ( end == -1 )
-									ix=end = doc.end;
+									doc.i=end = doc.end;
 								else
-									ix++;
+									doc.i++;
 							}
 							return this;
 						}else{
-							E x=new E(this);
+							Elem x=new Elem(this);
 							x.parse();
-							e=ix;//x.end;
+							e=doc.i;//x.end;
 						}
 					}
 				}while(e!=-1 && e<doc.end);
@@ -241,12 +278,12 @@ static class Asic extends Json{
 
 			String txt(){return txt(new StringBuffer()).toString();}
 			StringBuffer txt(StringBuffer b){
-				N n=firstChild;
+				Nd n=firstChild;
 				while(n!=null){
-					if(n instanceof E)
-						((E)n).txt(b);
+					if(n instanceof Elem)
+						((Elem)n).txt(b);
 					else
-						b.append(x.trim());
+						b.append(n.txt.trim());
 					n=n.nextSibling;
 				}
 				return b;
@@ -255,19 +292,321 @@ static class Asic extends Json{
 
 		//}//class P
 
-		Map<String,Object> m(E e){Map<String,Object> m =new HashMap<String,Object>();
+		/*
+		Map<String,Object> mE(E e){Map<String,Object> m =new HashMap<String,Object>();
 			N n=e.firstChild;
 			int i=0;
 			while(n!=null){
 				if(n instanceof E){
 					E x=(E)n;
-					m.put( x.id==null?String.valueOf(i):x.id,m(x) );
+					m.put( x.id==null?String.valueOf(i):x.id,mE(x) );
 				}
 				else m.put(String.valueOf(i),n.x);
 				n=n.nextSibling;
 				i++;
 			}
 			return m;}
+		Map<String,String>m(){
+			Map<String,String> m =new HashMap<String,String>();
+			for(String key:ids.keySet()){
+				Object o=ids.get(key);
+				if(o instanceof List){
+					List<E>l=(List<E>)o;int i=0;
+					for(E e:l)
+						m.put(key+'.'+(++i), e.txt());
+				}
+				else if(o instanceof E)
+					m.put(key, ((E)o).txt());
+			}
+			return m;}
+
+ParseStatus:html-parser:id=skiplink1
+ParseStatus:html-parser:id=skiplink2
+ParseStatus:html-parser:id=menubar
+ParseStatus:html-parser:id=navigation
+ParseStatus:html-parser:id=menubar : created-list------------------------
+ParseStatus:html-parser:id=maincontainer
+ParseStatus:html-parser:id=tabmenu
+ParseStatus:html-parser:id=maincontent
+ParseStatus:html-parser:id=content
+ParseStatus:html-parser:id=cbi-bmminerstatus
+ParseStatus:html-parser:id=cbi-table-table
+ParseStatus:html-parser:id=cbi-table-1
+ParseStatus:html-parser:id=ant_elapsed
+ParseStatus:html-parser:id=cbip-table-1-elapsed
+ParseStatus:html-parser:id=ant_ghs5s
+ParseStatus:html-parser:id=cbip-table-1-ghs5s
+ParseStatus:html-parser:id=ant_ghsav
+ParseStatus:html-parser:id=cbip-table-1-ghsav
+ParseStatus:html-parser:id=ant_foundblocks
+ParseStatus:html-parser:id=cbip-table-1-foundblocks
+ParseStatus:html-parser:id=ant_localwork
+ParseStatus:html-parser:id=cbip-table-1-localwork
+ParseStatus:html-parser:id=ant_utility
+ParseStatus:html-parser:id=cbip-table-1-utility
+ParseStatus:html-parser:id=ant_wu
+ParseStatus:html-parser:id=cbip-table-1-wu
+ParseStatus:html-parser:id=ant_bestshare
+ParseStatus:html-parser:id=cbip-table-1-bestshare
+ParseStatus:html-parser:id=cbi-table-table : created-list------------------------
+ParseStatus:html-parser:id=ant_pools
+ParseStatus:html-parser:id=cbi-table-1 : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-pool
+ParseStatus:html-parser:id=cbip-table-1-pool
+ParseStatus:html-parser:id=cbi-table-1-url
+ParseStatus:html-parser:id=cbip-table-1-url
+ParseStatus:html-parser:id=cbi-table-1-user
+ParseStatus:html-parser:id=cbip-table-1-user
+ParseStatus:html-parser:id=cbi-table-1-status
+ParseStatus:html-parser:id=cbip-table-1-status
+ParseStatus:html-parser:id=cbi-table-1-diff
+ParseStatus:html-parser:id=cbip-table-1-diff
+ParseStatus:html-parser:id=cbi-table-1-getworks
+ParseStatus:html-parser:id=cbip-table-1-getworks
+ParseStatus:html-parser:id=cbi-table-1-priority
+ParseStatus:html-parser:id=cbip-table-1-priority
+ParseStatus:html-parser:id=cbi-table-1-accepted
+ParseStatus:html-parser:id=cbip-table-1-accepted
+ParseStatus:html-parser:id=cbi-table-1-diff1shares
+ParseStatus:html-parser:id=cbip-table-1-diff1shares
+ParseStatus:html-parser:id=cbi-table-1-diffaccepted
+ParseStatus:html-parser:id=cbip-table-1-diffaccepted
+ParseStatus:html-parser:id=cbi-table-1-diffrejected
+ParseStatus:html-parser:id=cbip-table-1-diffrejected
+ParseStatus:html-parser:id=cbi-table-1-diffstale
+ParseStatus:html-parser:id=cbip-table-1-diffstale
+ParseStatus:html-parser:id=cbi-table-1-rejected
+ParseStatus:html-parser:id=cbip-table-1-rejected
+ParseStatus:html-parser:id=cbi-table-1-discarded
+ParseStatus:html-parser:id=cbip-table-1-discarded
+ParseStatus:html-parser:id=cbi-table-1-stale
+ParseStatus:html-parser:id=cbip-table-1-stale
+ParseStatus:html-parser:id=cbi-table-1-lastsharedifficulty
+ParseStatus:html-parser:id=cbip-table-1-lastsharedifficulty
+ParseStatus:html-parser:id=cbi-table-1-lastsharetime
+ParseStatus:html-parser:id=cbip-table-1-lastsharetime
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-pool : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-pool : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-url : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-url : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-user : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-user : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-status : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-status : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-diff : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-diff : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-getworks : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-getworks : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-priority : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-priority : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-accepted : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-accepted : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-diff1shares : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-diff1shares : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-diffaccepted : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-diffaccepted : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-diffrejected : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-diffrejected : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-diffstale : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-diffstale : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-rejected : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-rejected : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-discarded : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-discarded : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-stale : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-stale : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-lastsharedifficulty : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-lastsharedifficulty : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-lastsharetime : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-lastsharetime : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-pool : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-pool : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-url : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-url : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-user : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-user : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-diff : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-diff : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-getworks : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-getworks : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-priority : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-priority : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-accepted : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-accepted : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-diff1shares : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-diff1shares : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-diffaccepted : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-diffaccepted : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-diffrejected : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-diffrejected : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-diffstale : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-diffstale : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-rejected : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-rejected : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-discarded : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-discarded : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-stale : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-stale : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-lastsharedifficulty : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-lastsharedifficulty : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-lastsharetime : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-lastsharetime : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-pool : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-pool : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-url : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-url : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-user : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-user : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-diff : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-diff : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-getworks : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-getworks : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-priority : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-priority : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-accepted : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-accepted : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-diff1shares : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-diff1shares : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-diffaccepted : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-diffaccepted : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-diffrejected : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-diffrejected : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-diffstale : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-diffstale : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-rejected : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-rejected : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-discarded : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-discarded : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-stale : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-stale : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-lastsharedifficulty : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-lastsharedifficulty : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-lastsharetime : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-lastsharetime : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=6
+ParseStatus:html-parser:id=cbi-table-1-pool : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-pool : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-url : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-url : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-user : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-user : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-diff : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-diff : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-getworks : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-getworks : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-priority : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-priority : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-accepted : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-accepted : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-diff1shares : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-diff1shares : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-diffaccepted : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-diffaccepted : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-diffrejected : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-diffrejected : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-diffstale : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-diffstale : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-rejected : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-rejected : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-discarded : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-discarded : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-stale : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-stale : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-lastsharedifficulty : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-lastsharedifficulty : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-1-lastsharetime : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbip-table-1-lastsharetime : addTo-list:ListLen=5
+ParseStatus:html-parser:id=cbi-table-table : addTo-list:ListLen=3
+ParseStatus:html-parser:id=ant_devs
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=7
+ParseStatus:html-parser:id=cbi-table-1-chain
+ParseStatus:html-parser:id=cbip-table-1-chain
+ParseStatus:html-parser:id=cbi-table-1-asic
+ParseStatus:html-parser:id=cbip-table-1-asic
+ParseStatus:html-parser:id=cbi-table-1-frequency
+ParseStatus:html-parser:id=cbip-table-1-frequency
+ParseStatus:html-parser:id=cbi-table-1-rate2
+ParseStatus:html-parser:id=cbip-table-1-rate2
+ParseStatus:html-parser:id=cbi-table-1-rate
+ParseStatus:html-parser:id=cbip-table-1-rate
+ParseStatus:html-parser:id=cbi-table-1-hw
+ParseStatus:html-parser:id=cbip-table-1-hw
+ParseStatus:html-parser:id=cbi-table-1-temp
+ParseStatus:html-parser:id=cbip-table-1-temp
+ParseStatus:html-parser:id=cbi-table-1-temp2
+ParseStatus:html-parser:id=cbip-table-1-temp2
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=6
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=6
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=8
+ParseStatus:html-parser:id=cbi-table-1-chain : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-chain : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-asic : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-asic : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-frequency : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-frequency : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-rate2 : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-rate2 : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-rate : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-rate : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-hw : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-hw : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-temp : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-temp : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-temp2 : created-list------------------------
+ParseStatus:html-parser:id=cbip-table-1-temp2 : created-list------------------------
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=7
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=7
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=9
+ParseStatus:html-parser:id=cbi-table-1-chain : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-chain : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-asic : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-asic : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-frequency : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-frequency : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-rate2 : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-rate2 : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-rate : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-rate : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-hw : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-hw : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-temp : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-temp : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-temp2 : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbip-table-1-temp2 : addTo-list:ListLen=3
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=8
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=8
+ParseStatus:html-parser:id=cbi-table-1 : addTo-list:ListLen=10
+ParseStatus:html-parser:id=cbi-table-1-chain : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-chain : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-asic : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-asic : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-frequency : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-frequency : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-rate2 : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-rate2 : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-rate : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-rate : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-hw : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-hw : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-temp : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-temp : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-temp2 : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbip-table-1-temp2 : addTo-list:ListLen=4
+ParseStatus:html-parser:id=cbi-table-1-status : addTo-list:ListLen=9
+ParseStatus:html-parser:id=cbip-table-1-status : addTo-list:ListLen=9
+ParseStatus:html-parser:id=ant_fans			
+
+			*/
+
 	}//class ParseStatus
 
 	static Parse parse0=new Parse0()
