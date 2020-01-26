@@ -42,7 +42,6 @@ static void w(String pf,Date now,String fn,String ext,String x){
 
 public static void main(String[]args){
  try{baseDir=new File("./output/").getCanonicalPath();
-
 	new MainTest01();}catch(Exception e){
 		Json.error(e,"main");}
 }//main 
@@ -60,20 +59,16 @@ String fileString(String pth,String fn){
 
 MainTest01(){try{
 	if(global==null)sttc=global=this;
-	//String prefix="192.168.8.";int startPort= 141 ,endPort= 141 ,sleep=5000;
 	String src=fileString(
 		//"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
 		"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
 	,"status.22.713..html");
-	String result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
-	//Asic a=new Asic();//scan=new AsicsScanner(prefix, startPort, endPort, sleep);
-	//scan.start();
+	Map result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
 	
-	w("/"+258+"/",global.now=new Date(),"test-ParseStatus",".json",result);
+	w("/"+258+"/",global.now=new Date(),"test-ParseStatus",".json"
+		,jo().clrSW().o(result).toStrin_());
 } catch (Exception e) {
-	error(e, "MainTest01.<init>");
-}
-}
+	error(e, "MainTest01.<init>");}}
 
 static class Asic extends Json{
 	final static String Authorization=
@@ -83,26 +78,22 @@ static class Asic extends Json{
 	State state=State.init;
 Map<String,Map<String,String>>vals;
 
-	interface Parse{public String parse(String p); }
+	interface Parse{public Map<String,String> parse(String p); }
 
 	static class Parse0 implements Parse{
-	@Override public String parse(String p) {return p;}
-
-}
+	@Override public Map<String,String> parse(String p) {return mss(p);}}
 
 	static class ParseConfig implements Parse{
-	@Override public String parse(String p) {
+	@Override public Map<String,String> parse(String p) {
 		int i0=p.indexOf("{"),i1=p.indexOf("};");
-		String r=p.substring(i0,i1+2);
-		return r;}
-	}
+		return mss(p.substring(i0,i1+1));}}
 
 	static class ParseStatus implements Parse{
-		@Override public String parse(String s) {
-			String r="";try{
+		@Override public Map<String,String>parse(String s) {
+			Map<String,String>r=null;try{
 				ParseStatus p=new ParseStatus(s);
-				r=Json.jo().clrSW().oMap(p.ids,"","").toStrin_();
-			}catch ( IOException x ){
+				r=filterMss();//r=Json.jo().clrSW().oMap(p.ids,"","").toStrin_();
+			}catch ( Exception x ){
 				error(x,"Asic.ParseStatus.parse");}
 			return r;
 		}//parse
@@ -112,6 +103,31 @@ Map<String,Map<String,String>>vals;
 			ids=new HashMap<String,Object>();
 			doc=new Elem(s);
 		}
+
+		public Map<String,String>filterMss(){
+			Map<String,String>m=new HashMap<String,String>();
+			for(String key :ids.keySet()){
+				Object o=ids.get(key);String s;
+				if(o instanceof List){int i=0;
+					List<ParseStatus.Elem>l=(List<ParseStatus.Elem>)o;
+					for(ParseStatus.Elem e:l){
+						s=e.val();i++;
+						if(s!=null)
+							s=s.trim();
+						if(s!=null && s.length()>0)
+							m.put(key+'.'+i, s);
+					}
+				}
+				else if(o instanceof ParseStatus.Elem){
+					ParseStatus.Elem e=(ParseStatus.Elem)o;
+					s=e.val();
+					if(s!=null)
+						s=s.trim();
+					if(s!=null && s.length()>0)
+						m.put(key, s);
+				}
+			}
+			return m;}
 
 		//static class P extends E{
 			/**
@@ -329,7 +345,6 @@ Map<String,Map<String,String>>vals;
 		while ((numCharsRead = isr.read(charArray)) > 0)
 			sb.append(charArray, 0, numCharsRead);
 		String result = sb.toString();
-		//TODO: implement parsing Path.info result string
 		w(ip+"/",global.now,p.toString(),".html",p.parse.parse(result));
 	}
 
@@ -362,9 +377,7 @@ Map<String,Map<String,String>>vals;
 	public String toJson(){String t="";try{t=jo()
 		.clrSW()
 		.o("{base:",base
-			,",wallet:",wallet
-			,",tempr:",tempr
-			,",blocksFound:",blocksFound
+			,",vals:",vals
 			,",state:\"",state,"\"}")
 		.toStrin_();}catch(Exception ex){
 			error(ex,"Asic.toJson");}
@@ -372,32 +385,7 @@ Map<String,Map<String,String>>vals;
 
 	public String toString(){return toJson();}
 
-	public Map<String,String>filter1(Map<String,Object>p){
-		Map<String,String>m=new HashMap<String,String>();
-		for(String key :p.keySet()){
-			Object o=p.get(key);String s;
-			if(o instanceof List){int i=0;
-				List<ParseStatus.Elem>l=(List<ParseStatus.Elem>)o;
-				for(ParseStatus.Elem e:l){
-					s=e.val();i++;
-					if(s!=null)
-						s=s.trim();
-					if(s!=null && s.length()>0)
-						m.put(key+'.'+i, s);
-				}
-			}
-			else if(o instanceof ParseStatus.Elem){
-				ParseStatus.Elem e=(ParseStatus.Elem)o;
-				s=e.val();
-				if(s!=null)
-					s=s.trim();
-				if(s!=null && s.length()>0)
-					m.put(key, s);
-			}
-		}
-		return m;}
-
-	public Map<String,String>filter2(Map<String,String>p,Map<String,String>v){
+	static public Map<String,String>filterNewVals(Map<String,String>p,Map<String,String>v){
 		Map<String,String>m=null;
 		for(String key :v.keySet()){
 			String z=p.get(key),o=v.get(key);
@@ -410,6 +398,28 @@ Map<String,Map<String,String>>vals;
 		}
 		return m;}
 
+	static public Map<String,String>mss(Map p){
+		if(p==null ) // || p.size()==0
+			return null;
+		Map<String,String>m=new HashMap<String,String>();//p instanceof Map<String,String>?(Map<String,String>)p: null;
+		Json.Output jo=null;
+		for(Object k:p.keySet()){
+			Object o=p.get(k);
+			String key=k==null?"":k.toString()
+			,s=o instanceof String?(String)o:null;
+			if(s==null&&o!=null)try{
+				if(jo==null)
+					jo=jo().clrSW();
+				s=jo.o(o,"","").toStrin_();}catch(Exception x){
+					}
+			m.put(key, s);
+		}
+		return m;}
+	
+	static public Map<String,String>mss(String p){
+		Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){}
+		Map m=o==null?null:o instanceof Map?(Map)o:Json.map("",o);
+		return mss(m);}
 }//class Asic
 
 class AsicsScanner  extends Json{
