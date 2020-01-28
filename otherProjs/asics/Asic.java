@@ -121,7 +121,7 @@ class Asic extends Json{
 			m.put(key, s);
 		}
 		return m;}
-	
+
 	static public Map<String,String>mss(String p){
 		Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){}
 		Map m=o==null?null:o instanceof Map?(Map)o:Json.map("",o);
@@ -132,7 +132,8 @@ class Asic extends Json{
 		@Override public Map<String,String>parse(String s) {
 			Map<String,String>r=null;try{
 				ParseStatus p=new ParseStatus(s);
-				r=filterMss();//r=Json.jo().clrSW().oMap(p.ids,"","").toStrin_();
+				r=p.filterMss();
+				p.doc.fina();p.doc=null;p.ids.clear();p.ids=null;
 			}catch ( Exception x ){
 				error(x,"Asic.ParseStatus.parse");}
 			return r;
@@ -149,23 +150,23 @@ class Asic extends Json{
 			for(String key :ids.keySet()){
 				Object o=ids.get(key);String s;
 				if(o instanceof List){int i=0;
-					List<ParseStatus.Elem>l=(List<ParseStatus.Elem>)o;
-					for(ParseStatus.Elem e:l){
+					List<Elem>l=(List<Elem>)o;
+					for(Elem e:l){
 						s=e.val();i++;
-						if(s!=null)
+						if(s!=null){
 							s=s.trim();
-						if(s!=null && s.length()>0)
+						if( s.length()>0)
 							m.put(key+'.'+i, s);
-					}
+					}}
 				}
-				else if(o instanceof ParseStatus.Elem){
-					ParseStatus.Elem e=(ParseStatus.Elem)o;
+				else if(o instanceof Elem){
+					Elem e=(Elem)o;
 					s=e.val();
-					if(s!=null)
+					if(s!=null){
 						s=s.trim();
-					if(s!=null && s.length()>0)
+					if( s.length()>0)
 						m.put(key, s);
-				}
+				}}
 			}
 			return m;}
 
@@ -203,8 +204,8 @@ class Asic extends Json{
 			}
 			Nd(Elem p,int separator){this(p,doc.i,separator);}
 			Nd(Elem p,int start,int separator){
-				this(p);i=start;end=separator;if(separator!=-1)
-					txt=sub(chr(i)=='>'?i+1:i,doc.i=separator);
+				this(p);
+					txt=sub(chr(i=start)=='>'?i+1:i,doc.i=end=separator==-1?doc.end:separator);
 			}
 
 			Nd parse(){return this;}//parse
@@ -231,8 +232,21 @@ class Asic extends Json{
 			char chr(int x){
 				char t=doc.txt.charAt(x);
 				return t;}
-
-		}//class Nd
+			Nd fina(){
+				txt=null;
+				Nd n=previousSibling;
+				nextSibling=null;
+				if(parentNode!=null){
+					parentNode.lastChild=n;
+					parentNode=null;
+				}
+				if(n!=null){
+					n.nextSibling=previousSibling=null;
+					n.fina();
+				}
+				return this;
+			}
+	}//class Nd
 
 		/**Element or TagNode of a HTML-TreeNode, or comment, or frag, basically anything that starts with a &lt; */
 		class Elem extends Nd{
@@ -253,7 +267,7 @@ class Asic extends Json{
 					new Elem(doc):
 					new Nd(doc,iz);
 				if(iz==0)nextSibling.parse();
-				while(nextSibling.end<end){//int j=c.end;
+				while(nextSibling.end!=-1&&i<end&&nextSibling.end<end){//int j=c.end;
 					iz=s.indexOf('<',i);
 					boolean b=iz-i<2 &&iz>=0;
 					nextSibling=b?new Elem(doc):new Nd(doc,i,iz);
@@ -322,27 +336,31 @@ class Asic extends Json{
 							e +=2;// txt.length()+2;
 							d=ixOf('>', e);
 							doc.previousSibling=matchClose(e,d);
-							if ( doc.previousSibling==this) {//txt.equalsIgnoreCase( sub( end + 2, e ) )
-								doc.i=end = d;//ixOf( ">", e );
-								if ( end == -1 )
-									doc.i=end = doc.end;
-								else
-									doc.i++;
-								doc.previousSibling=null;
-								return this;
-							}//else {if( txt.equalsIgnoreCase( "table" ) ){System.out.println("Asic.ParseStatus:Elem.parse:table-tag:closing:");}
-							else if(doc.previousSibling!=null)
-								return this;//doc.previousSibling
+							if(doc.previousSibling!=null){
+								if ( doc.previousSibling==this) {//txt.equalsIgnoreCase( sub( end + 2, e ) )
+									doc.i=end = d;//ixOf( ">", e );
+									if ( end == -1 )
+										doc.i=end = doc.end;
+									else
+										doc.i++;
+									doc.previousSibling=null;
+									return this;
+								} 
+								return doc.previousSibling;//this;//
+							}
+							else{//System.out.println("Asic.ParseStatus:Elem.parse:closing:no match @"+d);
+								e=doc.i=1+(end=d);
+							}
 						}else{
 							Elem x=new Elem(this);
-							x.parse();
-							if(doc.previousSibling!=null){
-								if(doc.previousSibling!=this){
-									doc.previousSibling=null;
+							Nd n=x.parse();n=doc.previousSibling;
+							if(n!=null){
+								if(n==this){
+									doc.previousSibling=n=null;
 									doc.i=1+(end=doc.close);
 									doc.close=doc.end;
 								}
-								return this;
+								return n!=null?n:this;
 							}
 							else
 								e=doc.i;//x.end;
@@ -378,7 +396,15 @@ class Asic extends Json{
 			}
 
 			String val(){
-				Nd n=firstChild;return n==lastChild&&!(n instanceof Elem)?n.txt:null;}
+				Nd n=firstChild;return n!=null&&n==lastChild&&!(n instanceof Elem)?n.txt:null;}
+
+			Nd fina(){
+				while(lastChild!=null)
+					lastChild.fina();
+				id=null;
+				firstChild=null;
+				return super.fina();
+			}
 
 		}//class E
 
