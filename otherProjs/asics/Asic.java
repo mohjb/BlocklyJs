@@ -12,9 +12,7 @@ class Asic extends Json{
 	static MainTest01 global;
 	final static String Authorization=
 	"Digest username=\"root\", realm=\"antMiner Configuration\", nonce=\"b1b1652793d3109e9b29f0c3a111ffe5\", uri=\"/\", response=\"1fa4707b57aac3ad574bcd0f044f1cc8\", qop=auth, nc=00000001, cnonce=\"680d2ef66564dc19\"";
-	URL base;
-	int ip;	//String[]wallet;double[]tempr;int blocksFound;
-	State state=State.init;
+	URL base;int ip;State state=State.init;
 	Map<String,Map<String,String>>vals;
 
 	interface Parse{public Map<String,String> parse(String p); }
@@ -321,26 +319,50 @@ class Asic extends Json{
 						if ( chr( e + 1 ) == '/' ) {
 							doc.i=end = close = e;
 							doc.nextSibling = this;
-							e += txt.length()+2;
-							if ( txt.equalsIgnoreCase( sub( end + 2, e ) ) ) {
-								doc.i=end = ixOf( ">", e );
+							e +=2;// txt.length()+2;
+							d=ixOf('>', e);
+							doc.previousSibling=matchClose(e,d);
+							if ( doc.previousSibling==this) {//txt.equalsIgnoreCase( sub( end + 2, e ) )
+								doc.i=end = d;//ixOf( ">", e );
 								if ( end == -1 )
 									doc.i=end = doc.end;
 								else
 									doc.i++;
-							}else {if( txt.equalsIgnoreCase( "table" ) ){
-								System.out.println("Asic.ParseStatus:Elem.parse:table-tag:closing:");
-							}else
-							return this;
-						}}else{
+								doc.previousSibling=null;
+								return this;
+							}//else {if( txt.equalsIgnoreCase( "table" ) ){System.out.println("Asic.ParseStatus:Elem.parse:table-tag:closing:");}
+							else if(doc.previousSibling!=null)
+								return this;//doc.previousSibling
+						}else{
 							Elem x=new Elem(this);
 							x.parse();
-							e=doc.i;//x.end;
+							if(doc.previousSibling!=null){
+								if(doc.previousSibling!=this){
+									doc.previousSibling=null;
+									doc.i=1+(end=doc.close);
+									doc.close=doc.end;
+								}
+								return this;
+							}
+							else
+								e=doc.i;//x.end;
 						}
 					}
 				}while(e!=-1 && e<doc.end);
 				return this;
 			}//parse
+
+			Elem matchClose(int e,int c){
+				String x=sub(e, c);
+				Elem n=this;
+				while(n!=null){
+					if(x.equalsIgnoreCase(n.txt))
+					{	doc.close=c;
+						return n;}
+					else
+						n=n.parentNode;
+				}
+				return null;}
 
 			String txt(){return txt(new StringBuffer()).toString();}
 			StringBuffer txt(StringBuffer b){
