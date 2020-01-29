@@ -12,9 +12,9 @@ class Asic extends Json{
 	static MainTest01 global;
 	final static String Authorization=
 	"Digest username=\"root\", realm=\"antMiner Configuration\", nonce=\"b1b1652793d3109e9b29f0c3a111ffe5\", uri=\"/\", response=\"1fa4707b57aac3ad574bcd0f044f1cc8\", qop=auth, nc=00000001, cnonce=\"680d2ef66564dc19\"";
-	URL base;int ip;State state=State.init;
+	URL base;int ip;State state=State.init;String house,mac;
 	Map<String,Map<String,String>>vals;
-
+char[] charArray = new char[16383];
 	interface Parse{public Map<String,String> parse(String p); }
 
 	static class Parse0 implements Parse{
@@ -39,18 +39,27 @@ class Asic extends Json{
 			s=p;parse=prse;}
 	}
 
+
 	public void f(Path p)throws Exception{
+		String s=f0(p);
+		Map<String,String>m=filterNewVals(
+			mss(s))
+			;
+
+	}
+
+public String f0(Path p)throws Exception{
 		URL url = new URL(base,p.s);
 		URLConnection urlConnection = url.openConnection();
 		urlConnection.setRequestProperty("Authorization", Authorization);
 		InputStream is = urlConnection.getInputStream();
 		InputStreamReader isr = new InputStreamReader(is);
 		int numCharsRead;
-		char[] charArray = new char[16383];
+
 		StringBuffer sb = new StringBuffer();
 		while ((numCharsRead = isr.read(charArray)) > 0)
 			sb.append(charArray, 0, numCharsRead);
-		String result = sb.toString();
+		String result = sb.toString();return result;
 		//DB.log w(ip+"/",global.now,p.toString(),".html",p.parse.parse(result));
 	}
 
@@ -60,8 +69,8 @@ class Asic extends Json{
 		global.asics.add(this);
 	}
 
-	public void startMonitor(){
-		while(ip>=0)
+	public void startMonitor(){int i=10;
+		while(ip>=0 && --i>0)
 		try{
 			for(Path p:Path.values())
 				f(p);
@@ -126,7 +135,6 @@ class Asic extends Json{
 		Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){}
 		Map m=o==null?null:o instanceof Map?(Map)o:Json.map("",o);
 		return mss(m);}
-
 
 	static class ParseStatus implements Parse{
 		@Override public Map<String,String>parse(String s) {
