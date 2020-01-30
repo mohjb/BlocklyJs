@@ -1,5 +1,7 @@
+
 //{
 import java.util.Map;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
@@ -43,12 +45,12 @@ char[] charArray = new char[16383];
 	public void f(Path p)throws Exception{
 		String s=f0(p);
 		Map<String,String>m=filterNewVals(
-			mss(s))
-			;
-
+			vals.get(p.toString()),	mss(s))	;
+		if(m!=null)for(String key:m.keySet())
+		MainTest01.w(mac+'/'+p,new Date(),key,"json",m.get(key));
 	}
 
-public String f0(Path p)throws Exception{
+	public String f0(Path p)throws Exception{
 		URL url = new URL(base,p.s);
 		URLConnection urlConnection = url.openConnection();
 		urlConnection.setRequestProperty("Authorization", Authorization);
@@ -64,13 +66,14 @@ public String f0(Path p)throws Exception{
 	}
 
 	public void startScan()throws Exception{
-		f(Path.info);
+		f(Path.net);
 		global.scan.asics.remove(this);
 		global.asics.add(this);
 	}
 
-	public void startMonitor(){int i=10;
-		while(ip>=0 && --i>0)
+	public void startMonitor(){
+		long time=System.currentTimeMillis()+1000*30;
+		while(ip>=0 && time<System.currentTimeMillis())
 		try{
 			for(Path p:Path.values())
 				f(p);
@@ -100,15 +103,18 @@ public String f0(Path p)throws Exception{
 
 	public String toString(){return toJson();}
 
-	static public Map<String,String>filterNewVals(Map<String,String>p,Map<String,String>v){
-		Map<String,String>m=null;
-		for(String key :v.keySet()){
-			String z=p.get(key),o=v.get(key);
+	static public Map<String,String>filterNewVals(
+		Map<String,String>prvVals,
+		Map<String,String>newVals){
+		Map<String,String>m=null;boolean b=prvVals==null;
+		for(String key :newVals.keySet()){
+			String z=b?null:prvVals.get(key)
+			,o=newVals.get(key);
 			if(z==null || !z.equals(o))
 				{	if(m==null)
 						m=new HashMap<String,String>();	
 					m.put(key, o);
-					p.put(key, o);
+					if(!b)prvVals.put(key, o);
 				}
 		}
 		return m;}

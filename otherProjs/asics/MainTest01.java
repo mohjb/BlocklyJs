@@ -1,5 +1,4 @@
 //{
-import java.util.Map;
 import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
@@ -30,7 +29,8 @@ static String dt2secs(Date d){
 
 static void w(String pf,Date now,String fn,String ext,String x){
 	try {
-		String p=(baseDir.endsWith("/")?baseDir:baseDir+"/")+(pf!=null?pf:"")+dt2path(now);
+		String p=(baseDir.endsWith("/")?baseDir:baseDir+"/")
+			+(pf!=null?pf:"")+dt2path(now);
 		File f=new File(p);
 		f.mkdirs();
 		Files.write(Paths.get(p,fn+dt2secs(now)+ext),x.getBytes());
@@ -57,14 +57,6 @@ String fileString(String pth,String fn){
 
 MainTest01(){try{
 	if(Asic.global==null)sttc=Asic.global=this;
-	/*String src=fileString(
-		//"C:/Users/mohjb/Documents/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
-		"D:/apache-tomcat-8.0.15/webapps/ROOT/GitHub/BlocklyJs/otherProjs/asics/output/output141/2020/01/10/15/04"
-	,"status.22.713..html");
-	Map result=	Asic.Path.status.parse.parse(src);//Asic.ParseStatus p=new Asic.ParseStatus(src);
-	
-	w("/"+258+"/",Asic.global.now=new Date(),"test-ParseStatus",".json"
-		,jo().clrSW().o(result).toStrin_());*/
 	String prefix="192.168.8.";int startPort= 141 ,endPort= 141 ,sleep=5000;
 	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	scan.start();
