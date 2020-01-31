@@ -10,8 +10,7 @@ import java.text.SimpleDateFormat;
 
 public class MainTest01 extends Json{
 static String baseDir;//static MainTest01 global;
-AsicsScanner scan;
-Date now;
+AsicsScanner scan; //Date now;
 List<Asic>asics=new LinkedList<Asic>();
 
 static String dt2path(Date d){
@@ -57,7 +56,7 @@ String fileString(String pth,String fn){
 
 MainTest01(){try{
 	if(Asic.global==null)sttc=Asic.global=this;
-	String prefix="192.168.8.";int startPort= 141 ,endPort= 141 ,sleep=5000;
+	String prefix="192.168.8.";int startPort= 135 ,endPort= 141 ,sleep=2000;
 	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	scan.start();
 } catch (Exception e) {

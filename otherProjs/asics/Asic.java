@@ -46,7 +46,9 @@ char[] charArray = new char[16383];
 	public Map<String,String> f(Path p)throws Exception{
 		String s=f0(p),ps=p.toString();
 		Map<String,String>o=vals.get(ps);
-		Map<String,String>m=filterNewVals(o,	mss(s))	;
+		if(o==null)
+			vals.put(ps,o=new HashMap<String,String>());
+		Map<String,String>m=filterNewVals(o, mss(s));
 		if(m!=null){if(mac==null)mac=m.get("macaddr");
 			for(String key:m.keySet())
 			MainTest01.w(mac+'/'+p,new 
@@ -89,7 +91,9 @@ char[] charArray = new char[16383];
 		startScan();
 		startMonitor();
 		}catch(Exception ex){
-			error(ex,"Asic.run",base);}
+			error(ex,"Asic.run",base);
+			global.scan.asics.remove(this);
+		}
 	}
 
 	public Asic(String ipPrefix,int ip){
