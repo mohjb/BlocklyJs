@@ -14,7 +14,8 @@ class Asic extends Json{
 	static MainTest01 global;
 	final static String Authorization=
 	"Digest username=\"root\", realm=\"antMiner Configuration\", nonce=\"b1b1652793d3109e9b29f0c3a111ffe5\", uri=\"/\", response=\"1fa4707b57aac3ad574bcd0f044f1cc8\", qop=auth, nc=00000001, cnonce=\"680d2ef66564dc19\"";
-	URL base;int ip;State state=State.init;String house,mac;
+	URL base;int ip;State state=State.init;
+	String house,mac;
 	Map<String,Map<String,String>>vals;
 char[] charArray = new char[16383];
 	interface Parse{public Map<String,String> parse(String p); }
@@ -42,13 +43,15 @@ char[] charArray = new char[16383];
 	}
 
 
-	public void f(Path p)throws Exception{
-		String s=f0(p);
-		Map<String,String>m=filterNewVals(
-			vals.get(p.toString()),	mss(s))	;
-		if(m!=null)for(String key:m.keySet())
-		MainTest01.w(mac+'/'+p,new Date(),key,"json",m.get(key));
-	}
+	public Map<String,String> f(Path p)throws Exception{
+		String s=f0(p),ps=p.toString();
+		Map<String,String>o=vals.get(ps);
+		Map<String,String>m=filterNewVals(o,	mss(s))	;
+		if(m!=null){if(mac==null)mac=m.get("macaddr");
+			for(String key:m.keySet())
+			MainTest01.w(mac+'/'+p,new 
+				Date(),key,"json",m.get(key));}
+		return m;}
 
 	public String f0(Path p)throws Exception{
 		URL url = new URL(base,p.s);
@@ -66,7 +69,8 @@ char[] charArray = new char[16383];
 	}
 
 	public void startScan()throws Exception{
-		f(Path.net);
+		Map<String,String> m=f(Path.net);
+		mac=m.get("macaddr");
 		global.scan.asics.remove(this);
 		global.asics.add(this);
 	}
