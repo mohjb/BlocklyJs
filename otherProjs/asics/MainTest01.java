@@ -56,7 +56,7 @@ String fileString(String pth,String fn){
 
 MainTest01(){try{
 	if(Asic.global==null)sttc=Asic.global=this;
-	String prefix="192.168.8.";int startPort= 135 ,endPort= 141 ,sleep=2000;
+	String prefix="192.168.8.";int startPort= 2 ,endPort= 255,sleep=2000;
 	scan=new AsicsScanner(prefix, startPort, endPort, sleep);
 	scan.start();
 } catch (Exception e) {

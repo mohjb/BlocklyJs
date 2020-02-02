@@ -16,7 +16,7 @@ class Asic extends Json{
 	"Digest username=\"root\", realm=\"antMiner Configuration\", nonce=\"b1b1652793d3109e9b29f0c3a111ffe5\", uri=\"/\", response=\"1fa4707b57aac3ad574bcd0f044f1cc8\", qop=auth, nc=00000001, cnonce=\"680d2ef66564dc19\"";
 	URL base;int ip;State state=State.init;
 	String house,mac;
-	Map<String,Map<String,String>>vals;
+	Map<String,Map<String,String>>vals=new HashMap<String,Map<String,String>>();
 char[] charArray = new char[16383];
 	interface Parse{public Map<String,String> parse(String p); }
 
@@ -48,10 +48,15 @@ char[] charArray = new char[16383];
 		Map<String,String>o=vals.get(ps);
 		if(o==null)
 			vals.put(ps,o=new HashMap<String,String>());
-		Map<String,String>m=filterNewVals(o, mss(s));
-		if(m!=null){if(mac==null)mac=m.get("macaddr");
+		Map<String,String>m=filterNewVals(o, p.parse.parse(s));
+		if(m!=null){
+			if(mac==null){
+				mac=m.get("macaddr");
+				mac=mac==null
+					?String.valueOf(System.currentTimeMillis())
+					:mac.replaceAll(":", "-");}
 			for(String key:m.keySet())
-			MainTest01.w(mac+'/'+p,new 
+			MainTest01.w(mac+'/'+p+'/',new
 				Date(),key,"json",m.get(key));}
 		return m;}
 
@@ -71,26 +76,27 @@ char[] charArray = new char[16383];
 	}
 
 	public void startScan()throws Exception{
-		Map<String,String> m=f(Path.net);
-		mac=m.get("macaddr");
+		Map<String,String> m=f(Path.net);//mac=m.get("macaddr");
 		global.scan.asics.remove(this);
 		global.asics.add(this);
 	}
 
 	public void startMonitor(){
 		long time=System.currentTimeMillis()+1000*30;
-		while(ip>=0 && time<System.currentTimeMillis())
-		try{
-			for(Path p:Path.values())
+		while(ip>=0 && time>=System.currentTimeMillis())
+		try{for(Path p:Path.values())
 				f(p);
 			Thread.sleep(global.scan.sleep);
-		}catch(Exception ex){error(ex,"Asic.startMonitor",base);}//,ipPrefix,p
+		}catch(Exception ex){
+			error(ex,"Asic.startMonitor",base);}//,ipPrefix,p
 	}
 
 	public void run(){try{
 		startScan();
 		startMonitor();
-		}catch(Exception ex){
+		}
+		// java.net.ConnectException
+		catch(Exception ex){
 			error(ex,"Asic.run",base);
 			global.scan.asics.remove(this);
 		}

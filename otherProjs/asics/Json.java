@@ -263,7 +263,9 @@ public static class Prsr {
 	enum Literal{Undefined,Null};//,False,True
 
 	public static Object parse(String p)throws Exception{
-		Prsr j=new Prsr();j.rdr=new java.io.StringReader(p);return j.parse();}
+		Prsr j=new Prsr();j.rdr=new java.io.StringReader(p);
+		j.c=j.read();//2020-02-01 1:01
+		return j.parse();}
 
 	public static Object parseItem(Reader p)throws Exception{
 		Prsr j=new Prsr();j.rdr=p;return j.parseItem();}
