@@ -45,12 +45,12 @@ public static class D {
 		sets the pool as an application-scope attribute named context.pool.str
 		when first time called, all next calls uses this context.pool.str*/
 	public static synchronized Connection c()throws SQLException {
-		Connection r=(Connection)Json.m(context.reqCon.str);
+		Connection r=(Connection)Json.tl(context.reqCon.str);
 		if(r!=null)return r;
-		MysqlConnectionPoolDataSource d=(MysqlConnectionPoolDataSource)Json.m(context.pool.str);
+		MysqlConnectionPoolDataSource d=(MysqlConnectionPoolDataSource)Json.tl(context.pool.str);
 		if(d!=null){
 			r=d.getPooledConnection().getConnection();
-			Json.m(context.reqCon.str,r);
+			Json.tl(context.reqCon.str,r);
 			return r;//if(r!=null)
 		}
 		else try
@@ -66,7 +66,7 @@ public static class D {
 				+"/"+context.dbName.str
 				,context.un.str,context.pw.str
 			);Object[]b={r,null};
-			Json.m(context.reqCon.str,b);
+			Json.tl(context.reqCon.str,b);
 		}catch(Throwable e){error(e,"DB.DriverManager:");}
 		return r;}
 
@@ -87,8 +87,8 @@ public static class D {
 		if ( logOut ) ss += "\npw:" + s;
 		d.setPassword( s );
 		Connection r = d.getPooledConnection().getConnection();
-		Json.m( context.pool.str, d );//t.h.a(context.pool.str,d);
-		Json.m( context.reqCon.str, r );//Object[]a={d,r,ss};//,b={r,null};t.s(context.reqCon.str,b);
+		Json.tl( context.pool.str, d );//t.h.a(context.pool.str,d);
+		Json.tl( context.reqCon.str, r );//Object[]a={d,r,ss};//,b={r,null};t.s(context.reqCon.str,b);
 		//stack(t,r);
 		return r;
 	}
@@ -118,6 +118,9 @@ public static class D {
 				for ( int i = 1, n = p.length; p != null && i < n; i += 2 )
 					if ( (!(p[ i ] instanceof List)) ) // ||!(p[i-1] instanceof List)||((List)p[i-1]).size()!=2||((List)p[i-1]).get(1)!=Tbl.Co.in )
 						r.setObject( i / 2 + 1, p[ i ] );//if(t.logOut)TL.log("dbP:"+i+":"+p[i]);
+					else {List l=(List)p[ i ];if(l.size()>2)
+						r.setObject( i / 2 + 1, l.get( 2 ) );
+					}
 		} else
 			for ( int i = 0; p != null && i < p.length; i++ ) {
 				r.setObject( i + 1, p[ i ] );
@@ -490,7 +493,7 @@ public static class D {
 			try {
 				if ( b = row != null && row.rs != null && row.rs.next() ) row.row++;
 				else close( row.rs, true );//CHANGED:2015.10.23.16.06:closeRS ; 2017.7.17
-			} catch ( SQLException e ) {//TL t=TL.tl();//changed 2016.06.27 18:05final String str=Name+".DB.ItTbl.next";t.error(e,str);List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Util.lst(str,row!=null?row.row:-1,e));
+			} catch ( SQLException e ) {//TL t=TL.tl();//changed 2016.06.27 18:05final String str=Name+".DB.ItTbl.next";t.error(e,str);List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Json.Util.lst(str,row!=null?row.row:-1,e));
 				error( e, this );
 			}
 			return b;
@@ -545,7 +548,7 @@ public static class D {
 					return rs == null ? null : rs.getObject( ++col );
 				} catch ( SQLException e ) {//changed 2016.06.27 18:05
 					error( e, "DB.ItTbl.ItRow.next" );
-					//TL t=TL.tl();final String str=Name+;List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Util.lst(str,row,col,e));
+					//TL t=TL.tl();final String str=Name+;List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Json.Util.lst(str,row,col,e));
 				}
 				return null;
 			}
@@ -665,7 +668,7 @@ public static class D {
 		public Tbl v(Field p,Object v){//this is beautiful(tear running down cheek)
 			try{Class <?>t=p.getType();
 				if(v!=null && !t.isAssignableFrom( v.getClass() ))//t.isEnum()||t.isAssignableFrom(URL.class))
-					v=Util.parse(v instanceof String?(String)v:String.valueOf(v),t);
+					v=Json.Util.parse(v instanceof String?(String)v:String.valueOf(v),t);
 				p.set(this,v);
 			}catch (Exception ex) {error(ex,Name,".DB.Tbl.v(",this,",",p,",",v,")");}
 			return this;}
@@ -759,10 +762,10 @@ public static class D {
 		public abstract List creationDBTIndices();//TL tl
 
 		public void checkDBTCreation(){//TL tl
-			String dtn=getName();Object o=Json.m(Name+":db:show tables");
+			String dtn=getName();Object o=Json.tl(Name+":db:show tables");
 			if(o==null)
 				try {o=D.q1colList("show tables");
-					Json.m(Name+":db:show tables",o);
+					Json.tl(Name+":db:show tables",o);
 				} catch (SQLException ex) {
 					error(ex, Name+".DB.Tbl.checkTableCreation:check-pt1:",dtn);}
 			List l=(List)o;
@@ -1021,14 +1024,16 @@ public static class D {
 										)
 										.append( '\'' );
 							}b.append(")");
-						}else if(o instanceof Co)//o!=null)//if(ln==2 && )
+						}
+						else if(o instanceof Co)//o!=null)//if(ln==2 && )
 						{	Co m=(Co)o;o=l.get(0);
 							if(o instanceof CI || o instanceof Co)
 								b.append('`').append(o).append('`');
 							else
 								log(Name,".DB.Tbl.Co.where:unknown where-clause item:o=",o);
 							b.append(m.txt).append("?");
-						}else
+						}
+						else
 							log(Name,".DB.Tbl.Co.where:unknown where-clause item: o=",o);
 					}
 					else error(null,Name,".DB.Tbl.Col.where:for:",o);
@@ -1061,10 +1066,10 @@ public static class D {
 		static void check(){//TL tl
 			for(Class<? extends Tbl>c:registered)try
 			{String n=c.getName(),n2=".checkDBTCreation."+n;
-				if( Json.m(n2)==null){
+				if( Json.tl(n2)==null){
 					Tbl t=c.newInstance();
 					t.checkDBTCreation();
-					Json.m(n2,System.currentTimeMillis() );//tl.now
+					Json.tl(n2,System.currentTimeMillis() );//tl.now
 				}}catch(Exception ex){error( ex,Name,".DB.Tbl.check" );}
 		}
 	}//class Tbl
@@ -1100,11 +1105,11 @@ public static class Prop extends Tbl {
 
 	@Override public List creationDBTIndices(){
 		final String V="varchar(255) NOT NULL DEFAULT '??' ";
-		return Util.lst(Util.lst(
+		return Json.Util.lst(Json.Util.lst(
 			"int(36) not null primary key"
 				,"TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
 		,V,V,V,V,"text"
-			),Util.lst("unique(`"+C.usr+"`,`"+C.mac+"`,`"+C.prop+"`)"
+			),Json.Util.lst("unique(`"+C.usr+"`,`"+C.mac+"`,`"+C.prop+"`)"
 				,"index(`"+C.usr+"`,`"+C.log+"`)"
 				,"index(`"+C.usr+"`,`"+C.mac+"`,`"+C.log+"`)"
 				,"index(`"+C.usr+"`,`"+C.domain+"`,`"+C.log+"`)"
@@ -1130,7 +1135,7 @@ public static class Prop extends Tbl {
 	}
 
 	static{registered.add(Prop.class);}
-	public static Prop sttc=new Prop( );
+	//public static Prop sttc=new Prop( );
 
 	@Override public DB.Tbl save() throws Exception {
 		log=new Date();
@@ -1145,25 +1150,55 @@ public static class Prop extends Tbl {
 	}//saveLog
 
 	public static void save(String usr,String domain,String mac,String prop,String val)throws Exception{
-		Prop m=(Prop)Json.m("Prop");
-		if(m==null)Json.m("Prop",m=new Prop());
-		m.usr=usr;m.domain=domain;m.mac=mac;m.prop=prop;m.val=val;
+		save(usr,domain,mac,prop,val,null);} //Json.global.now
+
+	public static void save(String usr,String domain,String mac,String prop,SD d)throws Exception{
+		save(usr,domain,mac,prop,d.s,d.d);}
+
+	public static void save(String usr,String domain,String mac,String prop,String val,Date g)throws Exception{
+		Prop m=(Prop)Json.tl("Prop");
+		if(m==null)Json.tl("Prop",m=new Prop());
+		m.usr=usr;m.domain=domain;m.mac=mac;m.prop=prop;m.val=val;m.log=g;
 		m.save();
 	}
 
-	Map<String,Map<String,String>>props(String usr,String domain,String mac){
-		Map<String,Map<String,String>>m=new HashMap<String,Map<String,String>>();
-		for(Tbl t:query( where( C.usr,usr,C.domain,domain,C.mac,mac ) )){
-			int i=prop.indexOf( '.' );
-			String c=i==-1?prop:prop.substring( 0,i )
-				,p=i==-1?prop:prop.substring( i+1 );
-			Map<String,String>x=m.get( c );
-			if(x==null)
-				x=new HashMap<String,String>();
-			x.put( p,val );
+	Map<String,SD>props(Map<String,SD>m,String usr,String domain,String mac,Date log){
+		if(m==null)m=new HashMap<String,SD>();//Map<String,>
+		for(Tbl t:query(
+			where(C.usr,usr
+				, C.domain,domain
+				, C.mac,mac
+				,Json.Util.lst( C.log,Co.gt,log) )) )
+		{	//int i=prop.indexOf( '.' );String c=i==-1?prop:prop.substring( 0,i ),p=i==-1?prop:prop.substring( i+1 );Map<String,String>x=m.get( c );if(x==null)m.put(c,x=new HashMap<String,String>());x.put( p,val );
+			m.put( prop,new SD(val,log) );
 		}
+		return m;}
+
+	List<Asic>loadAsicsProps(String usr,String domain,boolean isInitMacs){
+		List<Asic>m=new LinkedList<Asic>();
+		try{Object[]a=D.q1col( "select `"+C.mac+"` from `"
+			+dbtName+"` where `"+C.usr+"`=? and  `"+C.domain
+			+"`=? group by `"+C.mac+"`",usr,domain );
+
+			for(Object o:a)try{
+				String mc=o==null?null:o.toString();
+				if(mc==null)continue;
+				Asic x=new Asic( null,-1 );x.mac=mc;
+				if(isInitMacs)Asic.macs.put( mc,x );
+				m.add( x );
+				x.vals=props(x.vals, usr,domain,mc,new Date(0) );
+			}catch ( Exception x ){}
+		}catch ( Exception x ){}
 		return m;
 	}
+
+	public static Prop tl(){Object o=Json.tl(dbtName);
+		Prop x=o instanceof Prop?(Prop)o:null;
+		if(x==null)
+			Json.tl(dbtName,x=new Prop());
+		return x;
+	}
+	public static class SD{public String s;public Date d;public SD(String a,Date b){s=a;d=b;}}
 
 } // class Prop extends DB.Tbl
 
@@ -1185,130 +1220,5 @@ public static class Log extends Prop{
 	public static Log sttc=new Log( );
 
 } // class Log extends Prop extends Tbl
-
-public static class Util{//utility methods
-	public static Map<Object, Object> mapCreate(Object...p){
-		Map<Object, Object> m=new HashMap<Object,Object>();//null;
-		return p.length>0?maPSet(m,p):m;}
-
-	public static Map<Object, Object> mapSet(Map<Object, Object> m,Object...p){return maPSet(m,p);}
-
-	public static Map<Object, Object> maPSet(Map<Object, Object> m,Object[]p){
-		for(int i=0;i<p.length;i+=2)m.put(p[i],p[i+1]);return m;}
-
-	public final static java.text.SimpleDateFormat
-		dateFormat=new java.text.SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
-
-	public static Integer[]parseInts(String s){
-		java.util.Scanner b=new java.util.Scanner(s),
-			c=b.useDelimiter("[\\s\\.\\-/\\:A-Za-z,]+");
-		List<Integer>l=new LinkedList<Integer>();
-		while(c.hasNextInt()){
-			//if(c.hasNextInt())else c.skip();
-			l.add(c.nextInt());
-		}c.close();b.close();
-		Integer[]a=new Integer[l.size()];l.toArray(a);
-		return a;}
-
-	static Date parseDate(String s){
-		Integer[]a=parseInts(s);int n=a.length;
-		if(n<2){long l=Long.parseLong(s);
-			Date d=new Date(l);
-			return d;}
-		java.util.GregorianCalendar c=new java.util.GregorianCalendar();
-		c.set(n>0?a[0]:0,n>1?a[1]-1:0,n>2?a[2]:0,n>3?a[3]:0,n>4?a[4]:0);
-		return c.getTime();}
-
-	/**returns a format string of the date as yyyy/MM/dd hh:mm:ss*/
-	public static String formatDate(Date p){return p==null?"":dateFormat.format(p);}
-
-	static String format(Object o)throws Exception{
-		if(o==null)return null;StringBuilder b=new StringBuilder("\"");
-		String a=o.getClass().isArray()?new String((byte[])o):o.toString();
-		for(int n=a.length(),i=0;i<n;i++)
-		{	char c=a.charAt(i);if(c=='\\')b.append('\\').append('\\');
-		else if(c=='"')b.append('\\').append('"');
-		else if(c=='\n')b.append('\\').append('n');//.append("\"\n").p(indentation).append("+\"");
-		else if(c=='\r')b.append('\\').append('r');
-		else if(c=='\t')b.append('\\').append('t');
-		else if(c=='\'')b.append('\\').append('\'');
-		else b.append(c);}return b.append('"').toString();}
-
-	/**return the integer-index of the occurrence of element-e in the array-a, or returns -1 if not found*/
-	public static int indexOf(Object[]a,Object e){int i=a.length;while(--i>-1&&(e!=a[i])&&(e==null||!e.equals(a[i])));return i;}
-
-	static boolean eq(Object a,Object e){
-		if(a==e||(a!=null&&a.equals(e)))return true;//||(a==null&&e==null)
-		return (a==null)?false:a.getClass().isArray()?indexOf((Object[])a,e)!=-1:false;}
-
-	public static List<Object>lst(Object...p){List<Object>r=new LinkedList<Object>();for(Object o:p)r.add(o);return r;}
-
-	public static boolean isNum(String v){
-		int i=-1,n=v!=null?v.length():0;
-		char c='\0';
-		boolean b=n>0;
-		while(b&& c!='.'&& i+1<n)
-		{c=++i<n?v.charAt(i):'\0';
-			b= Character.isDigit(c)||c=='.';
-		}
-		if(c=='.') while(b&& i+1<n)
-		{c=++i<n?v.charAt(i):'\0';
-			b= Character.isDigit(c);
-		};
-		return b;
-	}
-
-	public static int parseInt(String v,int dv){
-		if(isNum(v) )try{dv=Integer.parseInt(v);}
-		catch(Exception ex){//changed 2016.06.27 18:28
-			DB.error(ex, DB.Name,".Util.parseInt:",v,dv);
-		}return dv;
-	}
-
-	public static <T>T parse(String s,T defval){
-		if(s!=null)try{
-			Class<T> ct=(Class<T>) defval.getClass();
-			Class c=ct;
-			boolean b=c==null?false:c.isEnum();
-			if(!b){c=ct.getEnclosingClass();b=c==null?false:c.isEnum();}
-			if(b){
-				for(Object o:c.getEnumConstants())
-					if(s.equalsIgnoreCase(o.toString()))
-						return (T)o;
-			}}catch(Exception x){//changed 2016.06.27 18:28
-			DB.error(x, DB.Name,".Util.<T>T parse(String s,T defval):",s,defval);}
-		return defval;}
-
-	public static Object parse(String s,Class c){
-		if(s!=null)try{if(String.class.equals(c))return s;
-		else if(Number.class.isAssignableFrom(c)||c.isPrimitive()) {
-			if (Integer.class.equals(c)|| "int"   .equals(c.getName())) return new Integer(s);
-			else if (Double .class.equals(c)|| "double".equals(c.getName())) return new Double(s);
-			else if (Float  .class.equals(c)|| "float" .equals(c.getName())) return new Float(s);
-			else if (Short  .class.equals(c)|| "short" .equals(c.getName())) return new Short(s);
-			else if (Long   .class.equals(c)|| "long"  .equals(c.getName())) return new Long(s);
-			else if (Byte   .class.equals(c)|| "byte"  .equals(c.getName())) return new Byte(s);
-		}///else return new Integer(s);}
-		else if(Boolean.class.equals(c)||(c.isPrimitive()&&"boolean".equals(c.getName())))return new Boolean(s);
-		else if(Date.class.equals(c))return parseDate(s);
-		else if(Character.class.isAssignableFrom(c)||(c.isPrimitive()&&"char".equals(c.getName())))
-			return s.length()<1?'\0':s.charAt(0);
-		else if(URL.class.isAssignableFrom(c))try {return new URL("file:"
-			//+TL.tl().h.getServletContext().getContextPath()
-			 +'/'+s);}
-		catch (Exception ex) {DB.error(ex,DB.Name,".Util.parse:URL:p=",s," ,c=",c);}
-			boolean b=c==null?false:c.isEnum();
-			if(!b){Class ct=c.getEnclosingClass();b=ct==null?false:ct.isEnum();if(b)c=ct;}
-			if(b){
-				for(Object o:c.getEnumConstants())
-					if(s.equalsIgnoreCase(o.toString()))
-						return o;
-			}
-			return Json.Prsr.parse(s);
-		}catch(Exception x){//changed 2016.06.27 18:28
-			DB.error(x, DB.Name,".Util.<T>T parse(String s,Class):",s,c);}
-		return s;}
-
-}//class Util
 
 }//class DB

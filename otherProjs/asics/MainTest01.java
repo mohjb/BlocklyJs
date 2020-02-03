@@ -1,51 +1,13 @@
 //{
-import java.util.Date;//import java.nio.file.Paths;import java.nio.file.Files;import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.LinkedList;
+import java.util.*;
 import java.io.File;
 //}
 
 public class MainTest01 extends Json{
 static String baseDir;//static MainTest01 global;
 AsicsScanner scan; //Date now;
-List<Asic>asics=new LinkedList<Asic>();
-
-/*{
-	static String dt2path(Date d){
-		//DateTimeFormatter df=new DateTimeFormatter("yyyy/MM/dd/HH/mm/");//new SimpleDateFormat("yyyy/MM/dd/HH/mm/");
-		String pattern = "yyyy/MM/dd/HH/mm/";//"yyyy-MM-dd";
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-		String date = simpleDateFormat.format(d);
-		return date;}
-
-	static String dt2secs(Date d){
-			String pattern = ".ss.SSS.";
-			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-			String date = simpleDateFormat.format(d);
-			return date;}
-
-	static void w(String pf,Date now,String fn,String ext,String x){
-		try {
-			String p=(baseDir.endsWith("/")?baseDir:baseDir+"/")
-				+(pf!=null?pf:"")+dt2path(now);
-			File f=new File(p);
-			f.mkdirs();
-			//Files.write(Paths.get(p,fn+dt2secs(now)+ext),x.getBytes());
-		 } catch (Exception e) {
-			error(e,"MainTest01.w",fn,x);}}
-
-	String fileString(String pth,String fn){
-		String src="";try {
-			byte[]ba=Files.readAllBytes(//readString(
-				Paths.get(pth,fn));
-			src=new String(ba);
-		} catch (Exception e) {
-			error(e, "fileString");
-		}
-			return src;
-		}
-}*/
-
+Map<Integer,Asic>asics=new HashMap<Integer,Asic>();
+Map<String, DB.Prop.SD > cnfg;Date cnfgLog;
 public static void main(String[]args){
  try{baseDir=new File("./output/").getCanonicalPath();
 	 System.out.println("baseDir="+baseDir);
@@ -53,30 +15,50 @@ public static void main(String[]args){
 		Json.error(e,"main");}
 }//main 
 
-
 MainTest01(){
-	try{
-		if(Asic.global==null)sttc=Asic.global=this;
-		String prefix="192.168.8.";int startPort= 2 ,endPort= 255,sleep=2000;
-		scan=new AsicsScanner(prefix, startPort, endPort, sleep);
+	try{if(global==null)
+			global=this;
+		DB.Prop.tl().loadAsicsProps( "","",true );
+		Asic config=Asic.macs.get( "config" );
+		cnfg=config==null?null:config.vals;
+
+		String prefix=cnfg("prefix","192.168.8.")
+			,house=cnfg("house","258");
+		int startPort= cnfg("startPort",2)
+			,endPort= cnfg("endPort",255)//,sleep=Util.mapInt( cnfg,"sleep",2000)
+		;
+		scan=new AsicsScanner(prefix, startPort, endPort);
 		scan.start();
 	} catch (Exception e) {
 		error(e, "MainTest01.<init>");}
  }
 
+ boolean checkConfig(){
+	Map<String, DB.Prop.SD >v= DB.Prop.tl(). props(null,"","","config",cnfgLog);
+	return false;
+ }
+
+ String cnfg(String prop,String defVal){
+	//int i=prop.indexOf( '.' );	String c=i==-1?prop:prop.substring( 0,i )		,p=i==-1?prop:prop.substring( i+1 );	Map<String,String>x=cnfg.get( c );
+	DB.Prop.SD o=cnfg.get( prop );//x!=null?x.get( p ):x;
+	return o==null?defVal:o.s;}
+
+ int cnfg(String prop,int defVal){
+	String s=null;s=cnfg(prop,s);
+	return s==null?defVal:Util.parseInt( s,defVal );}
 
 class AsicsScanner  extends Json{
-	String prefix;int[]ports;long sleep;
-	List<Asic>asics=new LinkedList<Asic>();
+	String prefix;int[]ports;
 
 	public void run(){startScan();}
 
 	public void startScan(){
 		for(int ip=ports[0];ip<=ports[1];ip++)try{
-			Asic asic=new Asic(prefix,ip);
-			asics.add(asic);
-			asic.start();
-			log("AsicsScanner .startScan:",asic);
+			if(asics.get( ip )==null){
+				Asic asic=new Asic(prefix,ip);
+				asics.put(ip,asic);
+				asic.start();
+				log("AsicsScanner .startScan:",asic);}
 		}catch(Exception x){
 			error(x,"AsicsScanner.startScan:",ip);
 			//asics.remove(o)
@@ -84,8 +66,8 @@ class AsicsScanner  extends Json{
 	}
 
 	public AsicsScanner (
-		String prefix,int startPort,int endPort,long sleep){
-		int[]a={startPort,endPort};ports=a;this.prefix=prefix;this.sleep=sleep;}
+		String prefix,int startPort,int endPort){
+		int[]a={startPort,endPort};ports=a;this.prefix=prefix;}
 }// class AsicsScanner 
 
 }//public class MainTest01

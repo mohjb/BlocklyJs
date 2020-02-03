@@ -1,7 +1,6 @@
 //{
 import java.io.Writer;
 import java.io.IOException;
-//import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.File;
@@ -10,8 +9,8 @@ import java.io.FileReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
-import java.lang.reflect.Method;
-//import java.net.URL;//import java.lang.reflect.Field;//import java.net.URLConnection;import java.net.HttpURLConnection;//import java.util.Base64;// Java 8
+import java.lang.reflect.Method;//import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
@@ -22,19 +21,19 @@ import java.util.Enumeration;
 import java.util.Date;
 //}
 
-class Json extends Thread{
+public abstract class Json extends Thread{
+	static MainTest01 global;
 	Map<Object,Object> m;//Connection dbc; used mainly for DB , jo
-	static Json sttc;
-	static Json tl(){Thread t=Thread.currentThread();return t instanceof Json?(Json)t:sttc;}
-	static Object m(Object k){Json tl=tl();Object o=tl.m==null?null:tl.m.get(k);return o;}
-	static Object m(Object k,Object v){
+	static Json tl(){Thread t=Thread.currentThread();return t instanceof Json?(Json)t:global;}
+	static Object tl(Object k){Json tl=tl();Object o=tl.m==null?null:tl.m.get(k);return o;}
+	static Object tl(Object k,Object v){
 		Json tl=tl();if(tl.m==null)tl.m=new HashMap<Object,Object>();tl.m.put(k,v);return v;}
 	static Output jo(){
-		Object o=m("jo");
+		Object o=tl("jo");
 		Output j=o instanceof Output?
 		(Output)o
 		:null;if(j==null)
-			m("jo",j=new Output());
+			tl("jo",j=new Output());
 		return j;}
 
 	public static void log(Object...s){logA(s);}
@@ -55,14 +54,6 @@ class Json extends Thread{
 		System.err.println(s);
 		if(x!=null)x.printStackTrace();
 		}catch(Exception ex){ex.printStackTrace();}}
-
-
-	static List<Object> l(Object...a){List<Object>l=new LinkedList<Object>();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}//static List<T>l<T>(T...a){List<T>l=new LinkedList<T>();for(int i=0;i<a.length;i++)l.add(a[i]);return l;}
-	static Map<Object,Object> map(Object...a){return ma(new HashMap<Object,Object>(),a);}
-
-	static Map<Object,Object> ma(Map<Object,Object> m,Object[]a){
-	for(int i=0;i<a.length;i+=2)m.put(a[i],a[i+1]);
-	return m;}
 
 	public static class Output
 	{ public Writer w;
@@ -569,4 +560,142 @@ public static class Prsr {
  public boolean lookahead(String p){return lookahead(p,0);}
 
  }//Prsr
+
+
+public static class Util{//utility methods
+	public static Map<Object, Object> mapCreate(Object...p){
+		Map<Object, Object> m=new HashMap<Object,Object>();//null;
+		return p.length>0?maPSet(m,p):m;}
+
+	//public static Map<Object, Object> mapSet(Map<Object, Object> m,Object...p){return maPSet(m,p);}
+
+	public static Map<Object, Object> maPSet(Map<Object, Object> m,Object[]p){
+		for(int i=0;i<p.length;i+=2)m.put(p[i],p[i+1]);return m;}
+
+	public static int mapInt(Map m,String p,int defVal){
+		Object o=m==null?null:m.get( p );int i=defVal;
+		if(o!=null){
+			if(o instanceof Number)i=((Number)o).intValue();
+			else {String s=o.toString();if(isNum( s ))i=parseInt( s,i );}
+		}return i;}
+
+	public static String mapStr(Map m,String p,String defVal){
+		Object o=m==null?m:m.get( p );
+		return o!=null?o.toString():defVal;}
+
+	public final static java.text.SimpleDateFormat
+		dateFormat=new java.text.SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
+
+	public static Integer[]parseInts(String s){
+		java.util.Scanner b=new java.util.Scanner(s),
+			c=b.useDelimiter("[\\s\\.\\-/\\:A-Za-z,]+");
+		List<Integer>l=new LinkedList<Integer>();
+		while(c.hasNextInt()){
+			//if(c.hasNextInt())else c.skip();
+			l.add(c.nextInt());
+		}c.close();b.close();
+		Integer[]a=new Integer[l.size()];l.toArray(a);
+		return a;}
+
+	static Date parseDate(String s){
+		Integer[]a=parseInts(s);int n=a.length;
+		if(n<2){long l=Long.parseLong(s);
+			Date d=new Date(l);
+			return d;}
+		java.util.GregorianCalendar c=new java.util.GregorianCalendar();
+		c.set(n>0?a[0]:0,n>1?a[1]-1:0,n>2?a[2]:0,n>3?a[3]:0,n>4?a[4]:0);
+		return c.getTime();}
+
+	/**returns a format string of the date as yyyy/MM/dd hh:mm:ss*/
+	public static String formatDate(Date p){return p==null?"":dateFormat.format(p);}
+
+	static String format(Object o)throws Exception{
+		if(o==null)return null;StringBuilder b=new StringBuilder("\"");
+		String a=o.getClass().isArray()?new String((byte[])o):o.toString();
+		for(int n=a.length(),i=0;i<n;i++)
+		{	char c=a.charAt(i);if(c=='\\')b.append('\\').append('\\');
+		else if(c=='"')b.append('\\').append('"');
+		else if(c=='\n')b.append('\\').append('n');//.append("\"\n").p(indentation).append("+\"");
+		else if(c=='\r')b.append('\\').append('r');
+		else if(c=='\t')b.append('\\').append('t');
+		else if(c=='\'')b.append('\\').append('\'');
+		else b.append(c);}return b.append('"').toString();}
+
+	/**return the integer-index of the occurrence of element-e in the array-a, or returns -1 if not found*/
+	public static int indexOf(Object[]a,Object e){int i=a.length;while(--i>-1&&(e!=a[i])&&(e==null||!e.equals(a[i])));return i;}
+
+	static boolean eq(Object a,Object e){
+		if(a==e||(a!=null&&a.equals(e)))return true;//||(a==null&&e==null)
+		return (a==null)?false:a.getClass().isArray()?indexOf((Object[])a,e)!=-1:false;}
+
+	public static List<Object>lst(Object...p){List<Object>r=new LinkedList<Object>();for(Object o:p)r.add(o);return r;}
+
+	public static boolean isNum(String v){
+		int i=-1,n=v!=null?v.length():0;
+		char c='\0';
+		boolean b=n>0;
+		while(b&& c!='.'&& i+1<n)
+		{c=++i<n?v.charAt(i):'\0';
+			b= Character.isDigit(c)||c=='.';
+		}
+		if(c=='.') while(b&& i+1<n)
+		{c=++i<n?v.charAt(i):'\0';
+			b= Character.isDigit(c);
+		};
+		return b;
+	}
+
+	public static int parseInt(String v,int dv){
+		if(isNum(v) )try{dv=Integer.parseInt(v);}
+		catch(Exception ex){//changed 2016.06.27 18:28
+			DB.error(ex, DB.Name,".Util.parseInt:",v,dv);
+		}return dv;
+	}
+
+	public static <T>T parse(String s,T defval){
+		if(s!=null)try{
+			Class<T> ct=(Class<T>) defval.getClass();
+			Class c=ct;
+			boolean b=c==null?false:c.isEnum();
+			if(!b){c=ct.getEnclosingClass();b=c==null?false:c.isEnum();}
+			if(b){
+				for(Object o:c.getEnumConstants())
+					if(s.equalsIgnoreCase(o.toString()))
+						return (T)o;
+			}}catch(Exception x){//changed 2016.06.27 18:28
+			DB.error(x, DB.Name,".Util.<T>T parse(String s,T defval):",s,defval);}
+		return defval;}
+
+	public static Object parse(String s,Class c){
+		if(s!=null)try{if(String.class.equals(c))return s;
+		else if(Number.class.isAssignableFrom(c)||c.isPrimitive()) {
+			if (Integer.class.equals(c)|| "int"   .equals(c.getName())) return new Integer(s);
+			else if (Double .class.equals(c)|| "double".equals(c.getName())) return new Double(s);
+			else if (Float  .class.equals(c)|| "float" .equals(c.getName())) return new Float(s);
+			else if (Short  .class.equals(c)|| "short" .equals(c.getName())) return new Short(s);
+			else if (Long   .class.equals(c)|| "long"  .equals(c.getName())) return new Long(s);
+			else if (Byte   .class.equals(c)|| "byte"  .equals(c.getName())) return new Byte(s);
+		}///else return new Integer(s);}
+		else if(Boolean.class.equals(c)||(c.isPrimitive()&&"boolean".equals(c.getName())))return new Boolean(s);
+		else if(Date.class.equals(c))return parseDate(s);
+		else if(Character.class.isAssignableFrom(c)||(c.isPrimitive()&&"char".equals(c.getName())))
+			return s.length()<1?'\0':s.charAt(0);
+		else if( URL.class.isAssignableFrom(c))try {return new URL("file:"
+			//+TL.tl().h.getServletContext().getContextPath()
+			 +'/'+s);}
+		catch (Exception ex) {DB.error(ex,DB.Name,".Util.parse:URL:p=",s," ,c=",c);}
+			boolean b=c==null?false:c.isEnum();
+			if(!b){Class ct=c.getEnclosingClass();b=ct==null?false:ct.isEnum();if(b)c=ct;}
+			if(b){
+				for(Object o:c.getEnumConstants())
+					if(s.equalsIgnoreCase(o.toString()))
+						return o;
+			}
+			return Json.Prsr.parse(s);
+		}catch(Exception x){//changed 2016.06.27 18:28
+			DB.error(x, DB.Name,".Util.<T>T parse(String s,Class):",s,c);}
+		return s;}
+
+}//class Util
+
 }//class Json
