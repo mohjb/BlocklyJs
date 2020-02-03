@@ -52,11 +52,11 @@ char[] charArray = new char[16383];
 		if(m!=null){
 			if(mac==null){
 				mac=m.get("macaddr");
-				mac=mac==null
-					?String.valueOf(System.currentTimeMillis())
-					:mac.replaceAll(":", "-");}
+				if(mac==null)mac=
+					String.valueOf(System.currentTimeMillis());//:mac.replaceAll(":", "-");
+			}
 			for(String key:m.keySet())
-				;//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
+				DB.Prop.save( "",house,mac,p.toString()+'.'+key,m.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
 		}
 		return m;}
 
