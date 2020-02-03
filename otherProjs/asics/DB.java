@@ -1099,7 +1099,7 @@ public static class Prop extends Tbl {
 	@Override public C[]columns(){return C.values();}
 
 	@Override public List creationDBTIndices(){
-		final String V="varchar(255) NOT NULL DEFAULT 'home' ";
+		final String V="varchar(255) NOT NULL DEFAULT '??' ";
 		return Util.lst(Util.lst(
 			"int(36) not null primary key"
 				,"TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
@@ -1112,14 +1112,20 @@ public static class Prop extends Tbl {
 			)
 		);//val
 		/*
-		CREATE TABLE `JsonStorage` (
-		`app` varchar(255) NOT NULL DEFAULT '??',
-		`key` varchar(255) NOT NULL DEFAULT '??',
-
-		`val` blob ,
-		unique(`app`,`key`)
+		CREATE TABLE `Prop` (
+		`id`	int(36) not null primary key
+		,`log`	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		,`usr`	varchar(255) NOT NULL DEFAULT '??'
+		,`domain`varchar(255) NOT NULL DEFAULT '??'
+		,`mac`	varchar(255) NOT NULL DEFAULT '??'
+		,`prop`	varchar(255) NOT NULL DEFAULT '??'
+		,`val`	text
+		,unique(`usr`,`mac`,`prop`)
+		,index (`usr`,`log`)
+		,index (`usr`,`mac`,`log`)
+		,index (`usr`,`domain`,`log`)
+		,index (`usr`,`prop`,`log`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 		*/
 	}
 
@@ -1144,6 +1150,21 @@ public static class Prop extends Tbl {
 		m.usr=usr;m.domain=domain;m.mac=mac;m.prop=prop;m.val=val;
 		m.save();
 	}
+
+	Map<String,Map<String,String>>props(String usr,String domain,String mac){
+		Map<String,Map<String,String>>m=new HashMap<String,Map<String,String>>();
+		for(Tbl t:query( where( C.usr,usr,C.domain,domain,C.mac,mac ) )){
+			int i=prop.indexOf( '.' );
+			String c=i==-1?prop:prop.substring( 0,i )
+				,p=i==-1?prop:prop.substring( i+1 );
+			Map<String,String>x=m.get( c );
+			if(x==null)
+				x=new HashMap<String,String>();
+			x.put( p,val );
+		}
+		return m;
+	}
+
 } // class Prop extends DB.Tbl
 
 public static class Log extends Prop{
