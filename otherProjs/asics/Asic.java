@@ -56,8 +56,8 @@ char[] charArray = new char[16383];
 					?String.valueOf(System.currentTimeMillis())
 					:mac.replaceAll(":", "-");}
 			for(String key:m.keySet())
-			MainTest01.w(mac+'/'+p+'/',new
-				Date(),key,"json",m.get(key));}
+				;//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
+		}
 		return m;}
 
 	public String f0(Path p)throws Exception{
