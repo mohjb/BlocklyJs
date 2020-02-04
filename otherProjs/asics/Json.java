@@ -713,9 +713,8 @@ public static class Util{//utility methods
 
 public static class DB {
 	enum context{
-		pool("MysqlConnectionPoolDataSource")
-		,reqCon("javax.sql.PooledConnection")
-		,server("localhost")
+		//pool("MysqlConnectionPoolDataSource"),reqCon("javax.sql.PooledConnection"),
+		server("localhost")
 		,dbName("asics","test")
 		,un("root")
 		,pw("qwerty","root")
@@ -752,8 +751,7 @@ public static class DB {
 				("jdbc:mysql://"+context.server.str
 					 +"/"+context.dbName.str
 					,context.un.str,context.pw.str
-				);Object[]b={t.conn,null};
-				Json.tl(context.reqCon.str,b);
+				);//Object[]b={t.conn,null};//Json.tl(context.reqCon.str,b);
 			}catch(Throwable e){error(e,"DB.DriverManager:");}
 			return t.conn;}
 
