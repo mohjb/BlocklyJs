@@ -58,11 +58,9 @@ public Map<String,DB.Prop.SD> f(Path p)throws Exception{
 		if(ip==0 || global.asics.get( ip )==null){
 			ip=Util.parseInt( m.get(ps+".ipaddress").s,ip);//TODO: might be null, might change
 			global.asics.put( ip,this );
-		}
+		}String house=global.cnfg("house","258") ;
 		for(String key:m.keySet())
-			DB.Prop.save( ""
-				, global.cnfg("house","258")
-				,mac,p.toString()+'.'+key,m.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
+			DB.Prop.save( "",house,mac,p.toString()+'.'+key,m.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
 	}
 	return m;}
 
@@ -133,8 +131,7 @@ public String toJson(){
 
 public String toString(){return toJson();}
 
-public Map<String,DB.Prop.SD>filterNewVals(
-	                                          Map<String,DB.Prop.SD>newVals){//Map<String,DB.Prop.SD>prvVals,
+public Map<String,DB.Prop.SD>filterNewVals( Map<String,DB.Prop.SD>newVals){//Map<String,DB.Prop.SD>prvVals,
 	Map<String,DB.Prop.SD>m=null;//boolean b=prvVals==null;
 	for(String key :newVals.keySet()){
 		DB.Prop.SD z=vals.get(key)
