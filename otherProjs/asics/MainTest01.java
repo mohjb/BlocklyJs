@@ -9,15 +9,15 @@ AsicsScanner scan; //Date now;
 Map<Integer,Asic>asics=new HashMap<Integer,Asic>();
 Map<String, DB.Prop.SD > cnfg;Date cnfgLog;
 public static void main(String[]args){
- try{baseDir=new File("./output/").getCanonicalPath();
-	 System.out.println("baseDir="+baseDir);
-	new MainTest01();}catch(Exception e){
+	try{baseDir=new File("./output/").getCanonicalPath();
+		System.out.println("baseDir="+baseDir);
+		new MainTest01();}catch(Exception e){
 		Json.error(e,"main");}
-}//main 
+}//main
 
 MainTest01(){
 	try{if(global==null)
-			global=this;
+		global=this;
 		DB.Prop.tl().loadAsicsProps( "","",true );
 		Asic config=Asic.macs.get( "config" );
 		cnfg=config==null?null:config.vals;
@@ -26,24 +26,24 @@ MainTest01(){
 			,house=cnfg("house","258");
 		int startPort= cnfg("startPort",2)
 			,endPort= cnfg("endPort",255)//,sleep=Util.mapInt( cnfg,"sleep",2000)
-		;
+				 ;
 		scan=new AsicsScanner(prefix, startPort, endPort);
 		scan.start();
 	} catch (Exception e) {
 		error(e, "MainTest01.<init>");}
- }
+}
 
- boolean checkConfig(){
+boolean checkConfig(){
 	Map<String, DB.Prop.SD >v= DB.Prop.tl(). props(null,"","","config",cnfgLog);
 	return false;
- }
+}
 
- String cnfg(String prop,String defVal){
+String cnfg(String prop,String defVal){
 	//int i=prop.indexOf( '.' );	String c=i==-1?prop:prop.substring( 0,i )		,p=i==-1?prop:prop.substring( i+1 );	Map<String,String>x=cnfg.get( c );
 	DB.Prop.SD o=cnfg.get( prop );//x!=null?x.get( p ):x;
 	return o==null?defVal:o.s;}
 
- int cnfg(String prop,int defVal){
+int cnfg(String prop,int defVal){
 	String s=null;s=cnfg(prop,s);
 	return s==null?defVal:Util.parseInt( s,defVal );}
 
@@ -65,8 +65,7 @@ class AsicsScanner  extends Json{
 		}
 	}
 
-	public AsicsScanner (
-		String prefix,int startPort,int endPort){
+	public AsicsScanner (String prefix,int startPort,int endPort){
 		int[]a={startPort,endPort};ports=a;this.prefix=prefix;}
 }// class AsicsScanner 
 

@@ -1,8 +1,10 @@
-//{ import java.io.Writer;import java.io.OutputStream;import java.io.StringWriter;import java.io.File;import java.io.OutputStreamWriter;import java.io.PrintWriter;import java.lang.reflect.Method;import java.util.Collection;import java.util.Enumeration;
+/**
+ * Created by Vaio-PC on 2020-02-03.
+ */
+//{ import java.net.URL;import java.io.Writer;import java.io.OutputStream;import java.io.StringWriter;import java.io.File;import java.io.OutputStreamWriter;import java.io.PrintWriter;import java.lang.reflect.Method;import java.util.Collection;import java.util.Enumeration;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
-import java.net.URL;
 import java.util.Map;
 import java.util.List;
 import java.util.Date;
@@ -18,7 +20,7 @@ import java.sql.ResultSetMetaData	;
 import java.sql.SQLException		;
 
 import com.mysql.jdbc.jdbc2.optional
-	.MysqlConnectionPoolDataSource;
+	       .MysqlConnectionPoolDataSource;
 //}
 
 public class DB {
@@ -26,24 +28,24 @@ enum context{
 	pool("MysqlConnectionPoolDataSource")
 	,reqCon("javax.sql.PooledConnection")
 	,server("localhost")
-	,dbName("props")
+	,dbName("asics")
 	,un("root")
-,pw("root")
- ;String str,a[];context(String...p){str=p[0];a=p;}
+	,pw("root")
+	;String str,a[];context(String...p){str=p[0];a=p;}
 }//context
 
-	final static String Name="moh";
-	final static boolean logOut=false;
+final static String Name="moh";
+final static boolean logOut=false;
 
-	static void log(Object...p){}
-	static void error(Throwable x,Object...p){}
+static void log(Object...p){}
+static void error(Throwable x,Object...p){}
 
 public static class D {
 
 	/**returns a jdbc pooled Connection.
-		uses MysqlConnectionPoolDataSource with a database from the enum context.url.str,
-		sets the pool as an application-scope attribute named context.pool.str
-		when first time called, all next calls uses this context.pool.str*/
+	 uses MysqlConnectionPoolDataSource with a database from the enum context.url.str,
+	 sets the pool as an application-scope attribute named context.pool.str
+	 when first time called, all next calls uses this context.pool.str*/
 	public static synchronized Connection c()throws SQLException {
 		Connection r=(Connection)Json.tl(context.reqCon.str);
 		if(r!=null)return r;
@@ -62,10 +64,10 @@ public static class D {
 
 		if(r==null)try
 		{r=java.sql.DriverManager.getConnection
-			("jdbc:mysql://"+context.server.str
-				+"/"+context.dbName.str
-				,context.un.str,context.pw.str
-			);Object[]b={r,null};
+			                          ("jdbc:mysql://"+context.server.str
+				                           +"/"+context.dbName.str
+				                          ,context.un.str,context.pw.str
+			                          );Object[]b={r,null};
 			Json.tl(context.reqCon.str,b);
 		}catch(Throwable e){error(e,"DB.DriverManager:");}
 		return r;}
@@ -579,506 +581,506 @@ public static class D {
 	}//ItTbl
 }//public static class D
 
-	/**represents one entity , one row from a table in a relational database*/
-	public abstract static class Tbl {
+/**represents one entity , one row from a table in a relational database*/
+public abstract static class Tbl {
 
-		@Override public String toString(){return toJson(null);}
+	@Override public String toString(){return toJson(null);}
 
-		public abstract String getName();
-	
-		public Json.Output jsonOutput(Json.Output o,String ind,String path)throws java.io.IOException{return jsonOutput( o,ind,path,true );}
+	public abstract String getName();
 
-		public Json.Output jsonOutput(Json.Output o,String ind,String path,boolean closeBrace)throws java.io.IOException{
-			//if(o.comment)o.w("{//TL.Form:").w('\n').p(ind);else//.w(p.getClass().toString())
-			o.w('{');
-			Field[]a=fields();String i2=ind+'\n';
-			o.w("\"class\":").oStr(getClass().getSimpleName(),ind);//w("\"name\":").oStr(p.getName(),ind);
-			for(Field f:a)
-			{	o.w(',').oStr(f.getName(),i2).w(':')
-					.o(v(f),ind,o.comment?path+'.'+f.getName():path);
-				if(o.comment)o.w("//").w(f.toString()).w("\n").p(i2);
-			}
-			if(closeBrace){
-				if(o.comment)
-					o.w("}//DB.Tbl&cachePath=\"").p(path).w("\"\n").p(ind);
-				else o.w('}');}
-			return o; }
+	public Json.Output jsonOutput(Json.Output o,String ind,String path)throws java.io.IOException{return jsonOutput( o,ind,path,true );}
 
-		public String toJson(Json.Output o){if(o==null);try {jsonOutput(o, "", "");}catch (IOException ex) {}return o.toString();}
+	public Json.Output jsonOutput(Json.Output o,String ind,String path,boolean closeBrace)throws java.io.IOException{
+		//if(o.comment)o.w("{//TL.Form:").w('\n').p(ind);else//.w(p.getClass().toString())
+		o.w('{');
+		Field[]a=fields();String i2=ind+'\n';
+		o.w("\"class\":").oStr(getClass().getSimpleName(),ind);//w("\"name\":").oStr(p.getName(),ind);
+		for(Field f:a)
+		{	o.w(',').oStr(f.getName(),i2).w(':')
+				 .o(v(f),ind,o.comment?path+'.'+f.getName():path);
+			if(o.comment)o.w("//").w(f.toString()).w("\n").p(i2);
+		}
+		if(closeBrace){
+			if(o.comment)
+				o.w("}//DB.Tbl&cachePath=\"").p(path).w("\"\n").p(ind);
+			else o.w('}');}
+		return o; }
 
-
-		public abstract CI[]columns();//public abstract FI[]flds();
-
-		public Object[]vals(){
-			Field[]a=fields();
-			Object[]r=new Object[a.length];
-			int i=-1;
-			for(Field f:a){i++;
-				r[i]=v(a[i]);
-			}return r;}
+	public String toJson(Json.Output o){if(o==null);try {jsonOutput(o, "", "");}catch (IOException ex) {}return o.toString();}
 
 
-		public Tbl vals (Object[]p){
-			Field[]a=fields();int i=-1;
-			for(Field f:a)
-				v(f,p[++i]);
-			return this;}
+	public abstract CI[]columns();//public abstract FI[]flds();
 
-		public Map asMap(){
-			return asMap(null);}
+	public Object[]vals(){
+		Field[]a=fields();
+		Object[]r=new Object[a.length];
+		int i=-1;
+		for(Field f:a){i++;
+			r[i]=v(a[i]);
+		}return r;}
 
-		public Map asMap(Map r){
-			Field[]a=fields();
-			if(r==null)r=new HashMap();
-			int i=-1;
-			for(Field f:a){i++;
-				r.put(f.getName(),v(a[i]));
-			}return r;}
 
-		public Tbl fromMap (Map p){
-			Field[]a=fields();
-			for(Field f:a)
-				v(f,p.get(f.getName()));
-			return this;}
+	public Tbl vals (Object[]p){
+		Field[]a=fields();int i=-1;
+		for(Field f:a)
+			v(f,p[++i]);
+		return this;}
 
-		public Field[]fields(){return fields(getClass());}
+	public Map asMap(){
+		return asMap(null);}
 
-		public static Field[]fields(Class<?> c){
-			List<Field>l=fields(c,null);
-			int n=l==null?0:l.size();
-			Field[]r=new Field[n];
-			if(n>0)l.toArray(r);
-			return r;}
+	public Map asMap(Map r){
+		Field[]a=fields();
+		if(r==null)r=new HashMap();
+		int i=-1;
+		for(Field f:a){i++;
+			r.put(f.getName(),v(a[i]));
+		}return r;}
 
-		public static List<Field>fields(Class<?> c,List<Field>l){
-			//this is beautiful(tear running down cheek)
-			Class s=c==null?c:c.getSuperclass();
-			if(s!=null&&Tbl.class .isAssignableFrom( s))
-				l=fields( s,l );
-			Field[]a=c.getDeclaredFields();
-			if(l==null)l=new LinkedList<Field>();
-			for(Field f:a){F i=f.getAnnotation(F.class);
-				if(i!=null)l.add(f);}
-			return l;}
+	public Tbl fromMap (Map p){
+		Field[]a=fields();
+		for(Field f:a)
+			v(f,p.get(f.getName()));
+		return this;}
 
-		public Tbl v(CI p,Object v){return v(p.f(),v);}//this is beautiful(tear running down cheek)
+	public Field[]fields(){return fields(getClass());}
 
-		public Object v(CI p){return v(p.f());}//this is beautiful(tear running down cheek)
+	public static Field[]fields(Class<?> c){
+		List<Field>l=fields(c,null);
+		int n=l==null?0:l.size();
+		Field[]r=new Field[n];
+		if(n>0)l.toArray(r);
+		return r;}
 
-		public Tbl v(Field p,Object v){//this is beautiful(tear running down cheek)
-			try{Class <?>t=p.getType();
-				if(v!=null && !t.isAssignableFrom( v.getClass() ))//t.isEnum()||t.isAssignableFrom(URL.class))
-					v=Json.Util.parse(v instanceof String?(String)v:String.valueOf(v),t);
-				p.set(this,v);
-			}catch (Exception ex) {error(ex,Name,".DB.Tbl.v(",this,",",p,",",v,")");}
-			return this;}
+	public static List<Field>fields(Class<?> c,List<Field>l){
+		//this is beautiful(tear running down cheek)
+		Class s=c==null?c:c.getSuperclass();
+		if(s!=null&&Tbl.class .isAssignableFrom( s))
+			l=fields( s,l );
+		Field[]a=c.getDeclaredFields();
+		if(l==null)l=new LinkedList<Field>();
+		for(Field f:a){F i=f.getAnnotation(F.class);
+			if(i!=null)l.add(f);}
+		return l;}
 
-		public Object v(Field p){//this is beautiful(tear running down cheek)
-			try{return p.get(this);}
-			catch (Exception ex) {//IllegalArgumentException,IllegalAccessException
-				error(ex,Name,".DB.Tbl.v(",this,",",p,")");return null;}}
+	public Tbl v(CI p,Object v){return v(p.f(),v);}//this is beautiful(tear running down cheek)
 
-		/**Field annotation to designate a java member for use in a Html-Form-field/parameter*/
-		@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
-		public @interface F{	boolean prmPw() default false;boolean group() default false;boolean max() default false;boolean json() default false; }
+	public Object v(CI p){return v(p.f());}//this is beautiful(tear running down cheek)
 
-		/**Interface for enum-items from different forms and sql-tables ,
-			* the enum items represent a reference Column Fields for identifing the column and selection.*/
-		public interface CI{public Field f();}//interface I
+	public Tbl v(Field p,Object v){//this is beautiful(tear running down cheek)
+		try{Class <?>t=p.getType();
+			if(v!=null && !t.isAssignableFrom( v.getClass() ))//t.isEnum()||t.isAssignableFrom(URL.class))
+				v=Json.Util.parse(v instanceof String?(String)v:String.valueOf(v),t);
+			p.set(this,v);
+		}catch (Exception ex) {error(ex,Name,".DB.Tbl.v(",this,",",p,",",v,")");}
+		return this;}
+
+	public Object v(Field p){//this is beautiful(tear running down cheek)
+		try{return p.get(this);}
+		catch (Exception ex) {//IllegalArgumentException,IllegalAccessException
+			error(ex,Name,".DB.Tbl.v(",this,",",p,")");return null;}}
+
+	/**Field annotation to designate a java member for use in a Html-Form-field/parameter*/
+	@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+	public @interface F{	boolean prmPw() default false;boolean group() default false;boolean max() default false;boolean json() default false; }
+
+	/**Interface for enum-items from different forms and sql-tables ,
+	 * the enum items represent a reference Column Fields for identifing the column and selection.*/
+	public interface CI{public Field f();}//interface I
 
 	//}//public abstract static class Form
-	
-		/**Sql-Column Interface, for enum -items that represent columns in sql-tables
-		* the purpose of creating this interface is to centerlize
-		* the definition of the names of columns in java source code*/
-		//public interface CI extends FI{}//interface CI//			public String prefix();public String suffix();
 
-		public static CI[]cols(CI...p){return p;}
+	/**Sql-Column Interface, for enum -items that represent columns in sql-tables
+	 * the purpose of creating this interface is to centerlize
+	 * the definition of the names of columns in java source code*/
+	//public interface CI extends FI{}//interface CI//			public String prefix();public String suffix();
 
-		public static Object[]where(Object...p){return p;}
+	public static CI[]cols(CI...p){return p;}
 
-		public abstract CI pkc();
+	public static Object[]where(Object...p){return p;}
 
-		public abstract Object pkv();
-		//public abstract CI[]columns();//@Override public CI[]flds(){return columns();}
+	public abstract CI pkc();
 
-		public String sql(CI[]cols,Object[]where){
-			return sql(cols,where,null,null,getName());}
+	public abstract Object pkv();
+	//public abstract CI[]columns();//@Override public CI[]flds(){return columns();}
 
-		public static String sql(CI[]cols,Object[]where,String name){
-			return sql( cols, where,null,null,name);}//StringBuilder sql,
+	public String sql(CI[]cols,Object[]where){
+		return sql(cols,where,null,null,getName());}
 
-		public String sql(CI[]cols,Object[]where,CI[]groupBy){
-			return sql(cols,where,groupBy,null,getName());}
+	public static String sql(CI[]cols,Object[]where,String name){
+		return sql( cols, where,null,null,name);}//StringBuilder sql,
+
+	public String sql(CI[]cols,Object[]where,CI[]groupBy){
+		return sql(cols,where,groupBy,null,getName());}
 
 
-		public String sql(String cols,Object[]where,CI[]groupBy,CI[]orderBy) {
-			StringBuilder sql=new StringBuilder("select ");
-			sql.append(cols);//Co.generate(sql,cols);
-			sql.append(" from `").append(getName()).append("` ");
-			if(where!=null&&where.length>0)
-				DB.Tbl.Co.where(sql, where);
-			if(groupBy!=null && groupBy.length>0){
-				sql.append(" group by ");
-				Co.generate(sql,groupBy);}
-			if(orderBy!=null && orderBy.length>0){
-				sql.append(" order by ");
-				Co.generate(sql,orderBy);}
-			return sql.toString();}
+	public String sql(String cols,Object[]where,CI[]groupBy,CI[]orderBy) {
+		StringBuilder sql=new StringBuilder("select ");
+		sql.append(cols);//Co.generate(sql,cols);
+		sql.append(" from `").append(getName()).append("` ");
+		if(where!=null&&where.length>0)
+			DB.Tbl.Co.where(sql, where);
+		if(groupBy!=null && groupBy.length>0){
+			sql.append(" group by ");
+			Co.generate(sql,groupBy);}
+		if(orderBy!=null && orderBy.length>0){
+			sql.append(" order by ");
+			Co.generate(sql,orderBy);}
+		return sql.toString();}
 
-		public static String sql(CI[]cols,Object[]where,CI[]groupBy,CI[]orderBy,String dbtName){
-			//if(cols==null)cols=columns();
-			StringBuilder sql=new StringBuilder("select ");
-			Co.generate( sql,cols );//sql.append(cols);
-			sql.append(" from `").append(dbtName).append("` ");
-			if(where!=null&&where.length>0)
-				DB.Tbl.Co.where(sql, where);
-			if(groupBy!=null && groupBy.length>0){
-				sql.append(" group by ");
-				Co.generate(sql,groupBy);}
-			if(orderBy!=null && orderBy.length>0){
-				sql.append(" order by ");
-				Co.generate(sql,orderBy);}
-			return sql.toString();}
+	public static String sql(CI[]cols,Object[]where,CI[]groupBy,CI[]orderBy,String dbtName){
+		//if(cols==null)cols=columns();
+		StringBuilder sql=new StringBuilder("select ");
+		Co.generate( sql,cols );//sql.append(cols);
+		sql.append(" from `").append(dbtName).append("` ");
+		if(where!=null&&where.length>0)
+			DB.Tbl.Co.where(sql, where);
+		if(groupBy!=null && groupBy.length>0){
+			sql.append(" group by ");
+			Co.generate(sql,groupBy);}
+		if(orderBy!=null && orderBy.length>0){
+			sql.append(" order by ");
+			Co.generate(sql,orderBy);}
+		return sql.toString();}
 
-		/** returns a list of 3 lists,
-		* the 1st is a list for the db-table columns-CI
-		* the 2nd is a list for the db-table-key-indices
-		* the 3rd is a list for row insertion
-		*
-		* the 1st list, the definition of the column is a string
-		* , e.i. varchar(255) not null
-		* or e.i. int(18) primary key auto_increment not null
-		* the 2nd list of the db-table key-indices(optional)
-		* each dbt-key-index can be a CI or a list , if a list
-		* each item has to be a List
-		* ,can start with a prefix, e.i. unique , or key`ix1`
-		* , the items of this list should be a CI
-		* ,	or the item can be a list that has as the 1st item the CI
-		* and the 2nd item the length of the index
-		* the third list is optional, for each item in this list
-		* is a list of values to be inserted into the created table
-		*/
-		public abstract List creationDBTIndices();//TL tl
+	/** returns a list of 3 lists,
+	 * the 1st is a list for the db-table columns-CI
+	 * the 2nd is a list for the db-table-key-indices
+	 * the 3rd is a list for row insertion
+	 *
+	 * the 1st list, the definition of the column is a string
+	 * , e.i. varchar(255) not null
+	 * or e.i. int(18) primary key auto_increment not null
+	 * the 2nd list of the db-table key-indices(optional)
+	 * each dbt-key-index can be a CI or a list , if a list
+	 * each item has to be a List
+	 * ,can start with a prefix, e.i. unique , or key`ix1`
+	 * , the items of this list should be a CI
+	 * ,	or the item can be a list that has as the 1st item the CI
+	 * and the 2nd item the length of the index
+	 * the third list is optional, for each item in this list
+	 * is a list of values to be inserted into the created table
+	 */
+	public abstract List creationDBTIndices();//TL tl
 
-		public void checkDBTCreation(){//TL tl
-			String dtn=getName();Object o=Json.tl(Name+":db:show tables");
-			if(o==null)
-				try {o=D.q1colList("show tables");
-					Json.tl(Name+":db:show tables",o);
-				} catch (SQLException ex) {
-					error(ex, Name+".DB.Tbl.checkTableCreation:check-pt1:",dtn);}
-			List l=(List)o;
-			try{if(o==null||(!l.contains( dtn )&&!l.contains( dtn.toLowerCase()))
-			){
-				StringBuilder sql= new StringBuilder("CREATE TABLE `").append(dtn).append("` (\n");
-				CI[]ci=columns();int an,x=0;
-				List a=creationDBTIndices(),b=(List)a.get(0);
-				for(CI i:ci){
-					if(x>0 )
-						sql.append("\n,");
-					sql.append('`').append(i).append('`')
-						.append(String.valueOf(b.get(x)) );
-					x++;}
-				an=a.size();b=an>1?(List)a.get(1):b;
-				if(an>1)for(Object bo:b)
-				{sql.append("\n,");x=0;
-					if(bo instanceof CI)
-						sql.append("KEY(`").append(bo).append("`)");
-					else if(bo instanceof List)
-					{	List bl=(List)bo;x=0;boolean keyHeadFromList=false;
-						for(Object c:bl){
-							boolean s=c instanceof String;
-							if(x<1 && !s&& !keyHeadFromList)
-								sql.append("KEY(");
-							if(x>0)
-								sql.append(',');//in the list
-							if(s){sql.append((String)c);if(x==0){x--;keyHeadFromList=true;}}
-							else {l=c instanceof List?(List)c:null;
-								sql.append('`').append(
-									l==null?String.valueOf(c)
-										:String.valueOf(l.get(0))
-								).append("`");
-								if(l!=null&&l.size()>1)
-									sql.append('(').append(l.get(1)).append(')');
-							}x++;
-						}sql.append(")");
-					}else
-						sql.append(bo);
-				}
-				sql.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8 ;");
-				log(Name,".DB.Tbl.checkTableCreation:before:sql=",sql);
-				int r=D.x(sql.toString());
-				log(Name,".DB.Tbl.checkTableCreation:executedSql:",dtn,":returnValue=",r);
-				b=an>2?(List)a.get(2):b;if(an>2)
-					for(Object bo:b){
-						List c=(List)bo;
-						Object[]p=new Object[c.size()];
-						c.toArray(p);
-						vals(p);
-						try {save();} catch (Exception ex) {
-							error(ex, Name,".DB.Tbl.checkTableCreation:insertion",c);}
-					}
-			}
+	public void checkDBTCreation(){//TL tl
+		String dtn=getName();Object o=Json.tl(Name+":db:show tables");
+		if(o==null)
+			try {o=D.q1colList("show tables");
+				Json.tl(Name+":db:show tables",o);
 			} catch (SQLException ex) {
-				error(ex, Name,".DB.Tbl.checkTableCreation:errMain:",dtn);}
-		}//checkTableCreation
-
-		/**where[]={col-name , param}*/
-		public int count(Object[]where) throws Exception{return count(where,null,getName());}
-
-		public static int count(Object[]where,CI[]groupBy,String name) throws Exception{
-				String sql=sql(cols(Co.count),where,groupBy,null,name);//new StringBuilder("select count(*) from `").append(getName()).append("` where `").append(where[0]).append("`=").append(Co.m(where[0]).txt);//where[0]instanceof CI?m((CI)where[0]):'?');
-				return D.q1int(sql,-1,where[0],where[1]);}
-
-		public int maxPlus1(CI col) throws Exception{
-			String sql=sql("max(`"+col+"`)+1",null,null,null);
-			return D.q1int(sql,1);}
-
-		public static int maxPlus1(CI col,String dbtn) throws Exception{
-			String sql="SELECT max(`"+col+"`)+1 from `"+dbtn+"`";
-			return D.q1int(sql,1);}
-
-		// /**returns one object from the db-query*/ /**where[]={col-name , param}*/public Object obj(CI col,Object[]where) throws Exception{return DB.q1Obj(sql(cols(col),where),where);}
-		/**returns one string*/
-		public String select(CI col,Object[]where) throws Exception{
-			String sql=sql(cols(col),where);
-			return D.q1Str(sql,where);}
-
-		/**returns a table*/
-		public Object[][]select(CI[]col,Object[]where)throws Exception{
-			return D.Q(sql(col,where), where);}
-
-		/**loads one row from the table*/
-		Tbl load(ResultSet rs)throws Exception{return load(rs,fields());}
-
-		/**loads one row from the table*/
-		Tbl load(ResultSet rs,Field[]a)throws Exception{
-			int c=0;for(Field f:a)v(f,rs.getObject(++c));
-			return this;}
-
-		/**loads one row from the table*/
-		public Tbl load(Object pk){
-			ResultSet r=null;//TL t=tl();
-			try{r=D.r(sql(cols(Co.all), where(pkc()))
-				,pk);
-				if(r.next())load(r);
-				else{error(null,Name,".DB.Tbl(",this,").load(pk=",pk,"):resultset.next=false");nullify();}}
-			catch(Exception x){error(x,Name,".DB.Tbl(",this,"):",pk);}
-			finally{D.close(r,true);}
-			return this;}
-
-		public Tbl nullify(){return nullify(fields());}
-		public Tbl nullify(Field[]a){for(Field f:a)v(f,null);return this;}
-		// /**loads one row from the table*/ Tbl load(){return load(pkv());}
-
-		/**loads one row using column CI c */
-		Tbl loadBy(CI c,Object v){
-			try{Object[]a=D.q1row(sql(cols(Co.all),where(c)),v);
-				vals(a);}
-			catch(Exception x){error(x,Name,".DB.Tbl(",this,").loadBy(",c,",",v,")");}
-			return this;}//loadBy
-
-		/**store this entity in the dbt , if pkv is null , this method uses the max+1 */
-		public Tbl save() throws Exception{
-			Object pkv=pkv();CI pkc=pkc();boolean nw=pkv==null;//Map old=asMap();
-			if(nw){
-				int x=D.q1int(//"select max(`" +pkc+"`)+1 from `"+getName()+"`"
-					sql("max(`"+pkc+"`)+1",null,null,null)
-					,1);
-				v(pkc,pkv=x);
-				//log(Name,".DB.Tbl(",toJson(),").save-new:max(",pkc,") + 1:",x);
-			}CI[]cols=columns();
-			StringBuilder sql=new StringBuilder("replace into`").append(getName()).append("`( ");
-			Co.generate(sql, cols);//.toString();
-			sql.append(")values(").append(Co.prm.txt);//Co.m(cols[0]).txt
-			for(int i=1;i<cols.length;i++)
-				sql.append(",").append(Co.prm.txt);//Co.m(cols[i]).txt
-			sql.append(")");//int x=
-			D.X( sql.toString(), vals() ); //TODO: investigate vals() for json columns
-			//log("save");//log(nw?DB.Tbl.Log.Act.New:DB.Tbl.Log.Act.Update);
-			return this;}//save
-
-
-		//void log(DB.Tbl.Log.Act act){	Map val=asMap();Integer k=(Integer)pkv();DB.Tbl.Log.log( DB.Tbl.Log.Entity.valueOf(getName()), k, act, val);}
-
-		public int delete() throws SQLException{
-			Object pkv=pkv();
-			int x=D.x("delete from `"+getName()+"` where `"+pkc()+"`=?", pkv);
-			//log(DB.Tbl.Log.Act.Delete);
-			return x;}
-
-		/**retrieve from the db table all the rows that match
-		* the conditions in < where > , create an iterator
-		* , e.g.<code>for(Tbl row:query(
-		* 		Tbl.where( CI , < val > ) ))</code>*/
-		public Itrtr query(Object[]where){
-			Itrtr r=new Itrtr(where);
-			return r;}
-
-		public Itrtr query(Object[]where,boolean makeClones){return query(columns(),where,null,makeClones);}
-
-		public Itrtr query(CI[]cols,Object[]where,CI[]groupBy,boolean makeClones){//return query(sql(cols,where,groupBy),where,makeClones);}//public Itrtr query(String sql,Object[]where,boolean makeClones){
-				Itrtr r=new Itrtr(sql(cols,where,groupBy),where,makeClones);
-				return r;}
-
-		public class Itrtr implements Iterator<Tbl>,Iterable<Tbl>{
-			public ResultSet rs=null;public int i=0;Field[]a;boolean makeClones=false;
-
-			public Itrtr(String sql,Object[]where,boolean makeClones){
-				this.makeClones=makeClones;a=fields();
-				try{rs=D.R(sql, where);}
-				catch(Exception x){
-					error(x,Name,".DB.Tbl(",this,").Itrtr.<init>:where=",where);}
+				error(ex, Name+".DB.Tbl.checkTableCreation:check-pt1:",dtn);}
+		List l=(List)o;
+		try{if(o==null||(!l.contains( dtn )&&!l.contains( dtn.toLowerCase()))
+			    ){
+			StringBuilder sql= new StringBuilder("CREATE TABLE `").append(dtn).append("` (\n");
+			CI[]ci=columns();int an,x=0;
+			List a=creationDBTIndices(),b=(List)a.get(0);
+			for(CI i:ci){
+				if(x>0 )
+					sql.append("\n,");
+				sql.append('`').append(i).append('`')
+					.append(String.valueOf(b.get(x)) );
+				x++;}
+			an=a.size();b=an>1?(List)a.get(1):b;
+			if(an>1)for(Object bo:b)
+			{sql.append("\n,");x=0;
+				if(bo instanceof CI)
+					sql.append("KEY(`").append(bo).append("`)");
+				else if(bo instanceof List)
+				{	List bl=(List)bo;x=0;boolean keyHeadFromList=false;
+					for(Object c:bl){
+						boolean s=c instanceof String;
+						if(x<1 && !s&& !keyHeadFromList)
+							sql.append("KEY(");
+						if(x>0)
+							sql.append(',');//in the list
+						if(s){sql.append((String)c);if(x==0){x--;keyHeadFromList=true;}}
+						else {l=c instanceof List?(List)c:null;
+							sql.append('`').append(
+								l==null?String.valueOf(c)
+									:String.valueOf(l.get(0))
+							).append("`");
+							if(l!=null&&l.size()>1)
+								sql.append('(').append(l.get(1)).append(')');
+						}x++;
+					}sql.append(")");
+				}else
+					sql.append(bo);
 			}
-
-			public Itrtr(Object[]where){a=fields();
-				try{rs=D.R(sql(cols(Co.all),where), where);}
-				catch(Exception x){error(x,Name,".DB.Tbl(",this,").Itrtr.<init>:where=",where);}}
-
-			@Override public Iterator<Tbl>iterator(){return this;}
-
-			@Override public boolean hasNext(){
-				boolean b=false;
-				try {b = rs!=null&&rs.next();} catch (SQLException x)
-				{error(x,Name,".DB.Tbl(",this,").Itrtr.hasNext:i=",i,",rs=",rs);}
-				if(!b&&rs!=null){D.close(rs);rs=null;}
-				return b;}
-
-			@Override public Tbl next(){
-				i++;Tbl t=Tbl.this;
-				if(makeClones)try{
-					t=t.getClass().newInstance();}catch(Exception ex){
-					error(ex,Name,".DB.Tbl(",this,").Itrtr.next:i=",i,":",rs,":makeClones");
+			sql.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8 ;");
+			log(Name,".DB.Tbl.checkTableCreation:before:sql=",sql);
+			int r=D.x(sql.toString());
+			log(Name,".DB.Tbl.checkTableCreation:executedSql:",dtn,":returnValue=",r);
+			b=an>2?(List)a.get(2):b;if(an>2)
+				for(Object bo:b){
+					List c=(List)bo;
+					Object[]p=new Object[c.size()];
+					c.toArray(p);
+					vals(p);
+					try {save();} catch (Exception ex) {
+						error(ex, Name,".DB.Tbl.checkTableCreation:insertion",c);}
 				}
-				try{t.load(rs,a);}catch(Exception x){
-					error(x,Name,".DB.Tbl(",this,").Itrtr.next:i=",i,":",rs);
-					D.close(rs,true);rs=null;
-				}
-				return t;}
+		}
+		} catch (SQLException ex) {
+			error(ex, Name,".DB.Tbl.checkTableCreation:errMain:",dtn);}
+	}//checkTableCreation
 
-			@Override public void remove(){throw new UnsupportedOperationException();}
+	/**where[]={col-name , param}*/
+	public int count(Object[]where) throws Exception{return count(where,null,getName());}
 
-		}//Itrtr
+	public static int count(Object[]where,CI[]groupBy,String name) throws Exception{
+		String sql=sql(cols(Co.count),where,groupBy,null,name);//new StringBuilder("select count(*) from `").append(getName()).append("` where `").append(where[0]).append("`=").append(Co.m(where[0]).txt);//where[0]instanceof CI?m((CI)where[0]):'?');
+		return D.q1int(sql,-1,where[0],where[1]);}
 
-			/**Class for Utility methods on set-of-columns, opposed to operations on a single column*/
-		public enum Co implements CI {//Marker ,sql-preparedStatement-parameter
-			uuid("uuid()")
-			,now("now()")
-			,count("count(*)")
-			,all("*")
-			,prm("?")
-			,password("password(?)")
-			,Null("null")
-			,lt("<"),le("<="),ne("<>"),gt(">"),ge(">=")
-			,or("or"),like("like"),in("in"),maxLogTime("max(`logTime`)")//,and("and"),prnthss("("),max("max(?)")
-			;String txt;
+	public int maxPlus1(CI col) throws Exception{
+		String sql=sql("max(`"+col+"`)+1",null,null,null);
+		return D.q1int(sql,1);}
 
-			Co(String p){txt=p;}
+	public static int maxPlus1(CI col,String dbtn) throws Exception{
+		String sql="SELECT max(`"+col+"`)+1 from `"+dbtn+"`";
+		return D.q1int(sql,1);}
 
-			public Field f(){return null;}
+	// /**returns one object from the db-query*/ /**where[]={col-name , param}*/public Object obj(CI col,Object[]where) throws Exception{return DB.q1Obj(sql(cols(col),where),where);}
+	/**returns one string*/
+	public String select(CI col,Object[]where) throws Exception{
+		String sql=sql(cols(col),where);
+		return D.q1Str(sql,where);}
 
-			public static Field f(String name,Class<? extends Tbl>c){
-				//for(Field f:fields(c))if(name.equals(f.getName()))return f;return null;
-				Field r=null;try{r=c.getField(name);}catch(Exception x)
-				{error(x,Name,".DB.Tbl.f(",name,c,"):");}
-				return r;}
+	/**returns a table*/
+	public Object[][]select(CI[]col,Object[]where)throws Exception{
+		return D.Q(sql(col,where), where);}
 
-			/**generate Sql into the StringBuilder*/
-			public static StringBuilder generate(StringBuilder b,CI[]col){
-				return generate(b,col,",");}
+	/**loads one row from the table*/
+	Tbl load(ResultSet rs)throws Exception{return load(rs,fields());}
 
-			static StringBuilder generate(StringBuilder b,CI[]col,String separator){
-				if(separator==null)separator=",";
-				for(int n=col.length,i=0;i<n;i++){
-					if(i>0)b.append(separator);
-					if(col[i] instanceof Co)
-						b.append(((Co)col[i]).txt);
-					else
-						b.append("`").append(col[i]).append("`");}
-				return b;}
+	/**loads one row from the table*/
+	Tbl load(ResultSet rs,Field[]a)throws Exception{
+		int c=0;for(Field f:a)v(f,rs.getObject(++c));
+		return this;}
 
-			static StringBuilder where(StringBuilder b,Object[]where){
-				if(where==null || where.length<1)return b;
-				b.append(" where ");
-				for(int n=where.length,i=0;i<n;i++){Object o=where[i];
-					if(i>0)b.append(" and ");
-					if(o instanceof Co)b.append(o);else
-					if(o instanceof CI)
-						b.append('`').append(o).append("`=")
-							.append('?');//Co.m(o).txt
-					else if(o instanceof List){List l=(List)o;
-						o=l.size()>1?l.get(1):null;
-						if(o ==Co.in && i+1<n && where[i+1] instanceof List){
-							b.append('`').append(l.get(0)).append("` ").append(o);
-							l=(List)where[i+1];
-							b.append(" (");boolean comma=false;
-							for(Object z:l){
-								if(comma)b.append( ',' );else comma=true;
-								if(z instanceof Number)
-									b.append( z );else
-									b.append( '\'' )
-										.append(
-											(z instanceof String?(String)z:z.toString()
-											).replaceAll( "'","''" )
-										)
-										.append( '\'' );
-							}b.append(")");
-						}
-						else if(o instanceof Co)//o!=null)//if(ln==2 && )
-						{	Co m=(Co)o;o=l.get(0);
-							if(o instanceof CI || o instanceof Co)
-								b.append('`').append(o).append('`');
-							else
-								log(Name,".DB.Tbl.Co.where:unknown where-clause item:o=",o);
-							b.append(m.txt).append("?");
-						}
-						else
-							log(Name,".DB.Tbl.Co.where:unknown where-clause item: o=",o);
-					}
-					else error(null,Name,".DB.Tbl.Col.where:for:",o);
-					i++;
-				}//for
-				return b;}
-		}//enum Co
+	/**loads one row from the table*/
+	public Tbl load(Object pk){
+		ResultSet r=null;//TL t=tl();
+		try{r=D.r(sql(cols(Co.all), where(pkc()))
+			,pk);
+			if(r.next())load(r);
+			else{error(null,Name,".DB.Tbl(",this,").load(pk=",pk,"):resultset.next=false");nullify();}}
+		catch(Exception x){error(x,Name,".DB.Tbl(",this,"):",pk);}
+		finally{D.close(r,true);}
+		return this;}
 
-		/**output to jspOut one row of json of this row*/
-		public void outputJson(Json.Output o){
-			if(o==null)o=Json.jo();
-			try{o.o(this);}catch(IOException x){
-				error(x,"moh.DB.Tbl.outputJson:IOEx:");}
+	public Tbl nullify(){return nullify(fields());}
+	public Tbl nullify(Field[]a){for(Field f:a)v(f,null);return this;}
+	// /**loads one row from the table*/ Tbl load(){return load(pkv());}
+
+	/**loads one row using column CI c */
+	Tbl loadBy(CI c,Object v){
+		try{Object[]a=D.q1row(sql(cols(Co.all),where(c)),v);
+			vals(a);}
+		catch(Exception x){error(x,Name,".DB.Tbl(",this,").loadBy(",c,",",v,")");}
+		return this;}//loadBy
+
+	/**store this entity in the dbt , if pkv is null , this method uses the max+1 */
+	public Tbl save() throws Exception{
+		Object pkv=pkv();CI pkc=pkc();boolean nw=pkv==null;//Map old=asMap();
+		if(nw){
+			int x=D.q1int(//"select max(`" +pkc+"`)+1 from `"+getName()+"`"
+				sql("max(`"+pkc+"`)+1",null,null,null)
+				,1);
+			v(pkc,pkv=x);
+			//log(Name,".DB.Tbl(",toJson(),").save-new:max(",pkc,") + 1:",x);
+		}CI[]cols=columns();
+		StringBuilder sql=new StringBuilder("replace into`").append(getName()).append("`( ");
+		Co.generate(sql, cols);//.toString();
+		sql.append(")values(").append(Co.prm.txt);//Co.m(cols[0]).txt
+		for(int i=1;i<cols.length;i++)
+			sql.append(",").append(Co.prm.txt);//Co.m(cols[i]).txt
+		sql.append(")");//int x=
+		D.X( sql.toString(), vals() ); //TODO: investigate vals() for json columns
+		//log("save");//log(nw?DB.Tbl.Log.Act.New:DB.Tbl.Log.Act.Update);
+		return this;}//save
+
+
+	//void log(DB.Tbl.Log.Act act){	Map val=asMap();Integer k=(Integer)pkv();DB.Tbl.Log.log( DB.Tbl.Log.Entity.valueOf(getName()), k, act, val);}
+
+	public int delete() throws SQLException{
+		Object pkv=pkv();
+		int x=D.x("delete from `"+getName()+"` where `"+pkc()+"`=?", pkv);
+		//log(DB.Tbl.Log.Act.Delete);
+		return x;}
+
+	/**retrieve from the db table all the rows that match
+	 * the conditions in < where > , create an iterator
+	 * , e.g.<code>for(Tbl row:query(
+	 * 		Tbl.where( CI , < val > ) ))</code>*/
+	public Itrtr query(Object[]where){
+		Itrtr r=new Itrtr(where);
+		return r;}
+
+	public Itrtr query(Object[]where,boolean makeClones){return query(columns(),where,null,makeClones);}
+
+	public Itrtr query(CI[]cols,Object[]where,CI[]groupBy,boolean makeClones){//return query(sql(cols,where,groupBy),where,makeClones);}//public Itrtr query(String sql,Object[]where,boolean makeClones){
+		Itrtr r=new Itrtr(sql(cols,where,groupBy),where,makeClones);
+		return r;}
+
+	public class Itrtr implements Iterator<Tbl>,Iterable<Tbl>{
+		public ResultSet rs=null;public int i=0;Field[]a;boolean makeClones=false;
+
+		public Itrtr(String sql,Object[]where,boolean makeClones){
+			this.makeClones=makeClones;a=fields();
+			try{rs=D.R(sql, where);}
+			catch(Exception x){
+				error(x,Name,".DB.Tbl(",this,").Itrtr.<init>:where=",where);}
 		}
 
-		/**output to jspOut rows of json that meet the 'where' conditions*/
-		public void outputJson(Object...where){
-		 try{
+		public Itrtr(Object[]where){a=fields();
+			try{rs=D.R(sql(cols(Co.all),where), where);}
+			catch(Exception x){error(x,Name,".DB.Tbl(",this,").Itrtr.<init>:where=",where);}}
+
+		@Override public Iterator<Tbl>iterator(){return this;}
+
+		@Override public boolean hasNext(){
+			boolean b=false;
+			try {b = rs!=null&&rs.next();} catch (SQLException x)
+			{error(x,Name,".DB.Tbl(",this,").Itrtr.hasNext:i=",i,",rs=",rs);}
+			if(!b&&rs!=null){D.close(rs);rs=null;}
+			return b;}
+
+		@Override public Tbl next(){
+			i++;Tbl t=Tbl.this;
+			if(makeClones)try{
+				t=t.getClass().newInstance();}catch(Exception ex){
+				error(ex,Name,".DB.Tbl(",this,").Itrtr.next:i=",i,":",rs,":makeClones");
+			}
+			try{t.load(rs,a);}catch(Exception x){
+				error(x,Name,".DB.Tbl(",this,").Itrtr.next:i=",i,":",rs);
+				D.close(rs,true);rs=null;
+			}
+			return t;}
+
+		@Override public void remove(){throw new UnsupportedOperationException();}
+
+	}//Itrtr
+
+	/**Class for Utility methods on set-of-columns, opposed to operations on a single column*/
+	public enum Co implements CI {//Marker ,sql-preparedStatement-parameter
+		uuid("uuid()")
+		,now("now()")
+		,count("count(*)")
+		,all("*")
+		,prm("?")
+		,password("password(?)")
+		,Null("null")
+		,lt("<"),le("<="),ne("<>"),gt(">"),ge(">=")
+		,or("or"),like("like"),in("in"),maxLogTime("max(`logTime`)")//,and("and"),prnthss("("),max("max(?)")
+		;String txt;
+
+		Co(String p){txt=p;}
+
+		public Field f(){return null;}
+
+		public static Field f(String name,Class<? extends Tbl>c){
+			//for(Field f:fields(c))if(name.equals(f.getName()))return f;return null;
+			Field r=null;try{r=c.getField(name);}catch(Exception x)
+			{error(x,Name,".DB.Tbl.f(",name,c,"):");}
+			return r;}
+
+		/**generate Sql into the StringBuilder*/
+		public static StringBuilder generate(StringBuilder b,CI[]col){
+			return generate(b,col,",");}
+
+		static StringBuilder generate(StringBuilder b,CI[]col,String separator){
+			if(separator==null)separator=",";
+			for(int n=col.length,i=0;i<n;i++){
+				if(i>0)b.append(separator);
+				if(col[i] instanceof Co)
+					b.append(((Co)col[i]).txt);
+				else
+					b.append("`").append(col[i]).append("`");}
+			return b;}
+
+		static StringBuilder where(StringBuilder b,Object[]where){
+			if(where==null || where.length<1)return b;
+			b.append(" where ");
+			for(int n=where.length,i=0;i<n;i++){Object o=where[i];
+				if(i>0)b.append(" and ");
+				if(o instanceof Co)b.append(o);else
+				if(o instanceof CI)
+					b.append('`').append(o).append("`=")
+						.append('?');//Co.m(o).txt
+				else if(o instanceof List){List l=(List)o;
+					o=l.size()>1?l.get(1):null;
+					if(o ==Co.in && i+1<n && where[i+1] instanceof List){
+						b.append('`').append(l.get(0)).append("` ").append(o);
+						l=(List)where[i+1];
+						b.append(" (");boolean comma=false;
+						for(Object z:l){
+							if(comma)b.append( ',' );else comma=true;
+							if(z instanceof Number)
+								b.append( z );else
+								b.append( '\'' )
+									.append(
+										(z instanceof String?(String)z:z.toString()
+										).replaceAll( "'","''" )
+									)
+									.append( '\'' );
+						}b.append(")");
+					}
+					else if(o instanceof Co)//o!=null)//if(ln==2 && )
+					{	Co m=(Co)o;o=l.get(0);
+						if(o instanceof CI || o instanceof Co)
+							b.append('`').append(o).append('`');
+						else
+							log(Name,".DB.Tbl.Co.where:unknown where-clause item:o=",o);
+						b.append(m.txt).append("?");
+					}
+					else
+						log(Name,".DB.Tbl.Co.where:unknown where-clause item: o=",o);
+				}
+				else error(null,Name,".DB.Tbl.Col.where:for:",o);
+				i++;
+			}//for
+			return b;}
+	}//enum Co
+
+	/**output to jspOut one row of json of this row*/
+	public void outputJson(Json.Output o){
+		if(o==null)o=Json.jo();
+		try{o.o(this);}catch(IOException x){
+			error(x,"moh.DB.Tbl.outputJson:IOEx:");}
+	}
+
+	/**output to jspOut rows of json that meet the 'where' conditions*/
+	public void outputJson(Object...where){
+		try{
 			Json.Output o=Json.jo();
 			o.w('[');boolean comma=false;
 			for(Tbl i:query(where)){
 				if(comma)o.w(',');else comma=true;
 				i.outputJson();}
 			o.w(']');
-		 } catch (IOException e){error(e,Name,".DB.Tbl.outputJson:");}
-		}//outputJson(Object...where)
+		} catch (IOException e){error(e,Name,".DB.Tbl.outputJson:");}
+	}//outputJson(Object...where)
 
-		public static List<Class<? extends Tbl>>registered=new LinkedList<Class<? extends Tbl>>();
+	public static List<Class<? extends Tbl>>registered=new LinkedList<Class<? extends Tbl>>();
 
-		static void check(){//TL tl
-			for(Class<? extends Tbl>c:registered)try
-			{String n=c.getName(),n2=".checkDBTCreation."+n;
-				if( Json.tl(n2)==null){
-					Tbl t=c.newInstance();
-					t.checkDBTCreation();
-					Json.tl(n2,System.currentTimeMillis() );//tl.now
-				}}catch(Exception ex){error( ex,Name,".DB.Tbl.check" );}
-		}
-	}//class Tbl
+	static void check(){//TL tl
+		for(Class<? extends Tbl>c:registered)try
+		{String n=c.getName(),n2=".checkDBTCreation."+n;
+			if( Json.tl(n2)==null){
+				Tbl t=c.newInstance();
+				t.checkDBTCreation();
+				Json.tl(n2,System.currentTimeMillis() );//tl.now
+			}}catch(Exception ex){error( ex,Name,".DB.Tbl.check" );}
+	}
+}//class Tbl
 
 public static class Prop extends Tbl {
 	final static String dbtName="Prop";
 	static Field[]Filds;
 
-	@F public int id ;
+	@F public Integer id ;
 
 	@F public Date log ;
 
@@ -1106,19 +1108,19 @@ public static class Prop extends Tbl {
 	@Override public List creationDBTIndices(){
 		final String V="varchar(255) NOT NULL DEFAULT '??' ";
 		return Json.Util.lst(Json.Util.lst(
-			"int(36) not null primary key"
-				,"TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-		,V,V,V,V,"text"
+			"int(36) not null primary key auto_increment"
+			,"TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+			,V,V,V,V,"text"
 			),Json.Util.lst("unique(`"+C.usr+"`,`"+C.mac+"`,`"+C.prop+"`)"
-				,"index(`"+C.usr+"`,`"+C.log+"`)"
-				,"index(`"+C.usr+"`,`"+C.mac+"`,`"+C.log+"`)"
-				,"index(`"+C.usr+"`,`"+C.domain+"`,`"+C.log+"`)"
-				,"index(`"+C.usr+"`,`"+C.prop+"`,`"+C.log+"`)"
+			,"index(`"+C.usr+"`,`"+C.log+"`)"
+			,"index(`"+C.usr+"`,`"+C.mac+"`,`"+C.log+"`)"
+			,"index(`"+C.usr+"`,`"+C.domain+"`,`"+C.log+"`)"
+			,"index(`"+C.usr+"`,`"+C.prop+"`,`"+C.log+"`)"
 			)
 		);//val
 		/*
 		CREATE TABLE `Prop` (
-		`id`	int(36) not null primary key
+		`id`	int(36) not null primary key auto_increment
 		,`log`	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 		,`usr`	varchar(255) NOT NULL DEFAULT '??'
 		,`domain`varchar(255) NOT NULL DEFAULT '??'
@@ -1138,7 +1140,7 @@ public static class Prop extends Tbl {
 	//public static Prop sttc=new Prop( );
 
 	@Override public DB.Tbl save() throws Exception {
-		log=new Date();
+		if(log==null)log=new Date();
 		super.save();
 		saveLog();
 		return this;
@@ -1216,8 +1218,7 @@ public static class Log extends Prop{
 		return x;
 	}
 
-	static{registered.add(Log.class);}
-	public static Log sttc=new Log( );
+	static{registered.add(Log.class);}//public static Log sttc=new Log( );
 
 } // class Log extends Prop extends Tbl
 
