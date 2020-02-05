@@ -724,8 +724,6 @@ public static class DB {
 	final static String Name="moh";
 	final static boolean logOut=false;
 
-	//static void log(Object...p){Json.logA(p);}static void error(Throwable x,Object...p){Json.errorA(x,p);}
-
 	public static class D {
 
 		/**returns a jdbc pooled Connection.
@@ -1772,7 +1770,7 @@ public static class DB {
 
 		@F public Date log ;
 
-		@F public String usr,domain,mac,prop,val;
+		@F public String usr,domain,mac,path,prop,val;
 
 		@Override public Field[] fields() {
 			if(Filds==null)
@@ -1780,14 +1778,13 @@ public static class DB {
 			return Filds;
 		}
 
-		@Override public String getName() {
-			return dbtName;}
+		@Override public String getName() {return dbtName;}
 
 		@Override public CI pkc(){return C.id;}
 
 		@Override public Object pkv(){return id;}
 
-		public enum C implements CI{id,log,usr,domain,mac,prop,val;
+		public enum C implements CI{id,log,usr,domain,mac,path,prop,val;
 			@Override public Field f(){return Co.f(name(), Prop.class);}
 		}//C
 
@@ -1798,7 +1795,7 @@ public static class DB {
 			return Util.lst(Util.lst(
 				"int(36) not null primary key auto_increment"
 				,"TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-				,V,V,V,V,"text"
+				,V,V,V,V,V,"text"
 				),Util.lst("unique(`"+C.usr+"`,`"+C.mac+"`,`"+C.prop+"`)"
 				,"index(`"+C.usr+"`,`"+C.log+"`)"
 				,"index(`"+C.usr+"`,`"+C.mac+"`,`"+C.log+"`)"
@@ -1813,6 +1810,7 @@ public static class DB {
 		,`usr`	varchar(255) NOT NULL DEFAULT '??'
 		,`domain`varchar(255) NOT NULL DEFAULT '??'
 		,`mac`	varchar(255) NOT NULL DEFAULT '??'
+		,`path`	varchar(255) NOT NULL DEFAULT '??'
 		,`prop`	varchar(255) NOT NULL DEFAULT '??'
 		,`val`	text
 		,unique(`usr`,`mac`,`prop`)
@@ -1838,43 +1836,44 @@ public static class DB {
 			g.save();
 		}//saveLog
 
-		public static void save(String usr,String domain,String mac,String prop,String val)throws Exception{
-			save(usr,domain,mac,prop,val,null);} //global.now
+		//public static void save(String usr,String domain,String mac,String path,String prop,String val)throws Exception{save(usr,domain,mac,path,prop,val,null);} //global.now
 
-		public static void save(String usr,String domain,String mac,String prop,SD d)throws Exception{
-			save(usr,domain,mac,prop,d.s,d.d);}
-
-		public static void save(String usr,String domain,String mac,String prop,String val,Date g)throws Exception{
+		public static void save(String usr,String domain,String mac,String path,String prop,SD d)throws Exception{//save(usr,domain,mac,path,prop,d.s,d.d);
 			Prop m=Prop.tl();
-			m.usr=usr;m.domain=domain;m.mac=mac;m.prop=prop;m.val=val;m.log=g;
+			m.usr=usr;m.domain=domain;m.mac=mac;m.path=path;m.prop=prop;m.val=d.s;m.log=d.d;
 			m.save();
 		}
 
-		Map<String,SD>props(Map<String,SD>m,String usr,String domain,String mac,Date log){
-			if(m==null)m=new HashMap<String,SD>();//Map<String,>
+		//public static void save( String usr,String domain,String mac,String path,String prop,String val,Date g )throws Exception{ }
+
+		Map<String,Map<String,SD>>loadProps(Map<String,Map<String,SD>>m
+				,String usr,String domain,String mac,Date log){
+			if(m==null)m=new HashMap<String,Map<String,SD>>();
 			for(Tbl t:query(
 				where(C.usr,usr
 					, C.domain,domain
 					, C.mac,mac
 					,Util.lst( C.log,Co.gt,log) )) )
-			{	//int i=prop.indexOf( '.' );String c=i==-1?prop:prop.substring( 0,i ),p=i==-1?prop:prop.substring( i+1 );Map<String,String>x=m.get( c );if(x==null)m.put(c,x=new HashMap<String,String>());x.put( p,val );
-				m.put( prop,new SD(val,log) );
+			{	//int i=prop.indexOf( '.' );String c=i==-1?prop:prop.substring( 0,i ),p=i==-1?prop:prop.substring( i+1 );
+				Map<String,SD>x=m.get( path );
+				if(x==null)m.put(path,x=new HashMap<String,SD>());
+				x.put( prop,new SD(val,log) );
 			}
 			return m;}
 
 		List<Asic>loadAsicsProps(String usr,String domain,boolean isInitMacs){
 			List<Asic>m=new LinkedList<Asic>();
 			try{Object[]a=D.q1col( "select `"+C.mac+"` from `"
-				                       +dbtName+"` where `"+C.usr+"`=? and  `"+C.domain
-				                       +"`=? group by `"+C.mac+"`",usr,domain );
+				+dbtName+"` where `"+C.usr+"`=? and  `"+C.domain
+				+"`=? group by `"+C.mac+"`",usr,domain );
 
 				for(Object o:a)try{
-					String mc=o==null?null:o.toString();
-					if(mc==null)continue;
-					Asic x=new Asic( null,-1 );x.mac=mc;
-					if(isInitMacs)Asic.macs.put( mc,x );
+					String mac=o==null?null:o.toString();
+					if(mac==null)continue;
+					Asic x=new Asic( mac );
+					if(isInitMacs)Asic.macs.put( mac,x );
 					m.add( x );
-					x.vals=props(x.vals, usr,domain,mc,new Date(0) );
+					x.vals=loadProps(x.vals, usr,domain,mac,new Date(0) );
 				}catch ( Exception x ){}
 			}catch ( Exception x ){}
 			return m;
@@ -1913,7 +1912,7 @@ public static class DB {
 		public static Log tl(){
 			Json t=Json.tl();
 			if( t.log==null){
-				t.log=new Log();check();//Json.tl(K,x=new Log());//x.checkDBTCreation();
+				t.log=new Log();check();
 			}
 			return t.log;
 		}

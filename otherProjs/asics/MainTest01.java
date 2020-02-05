@@ -18,15 +18,14 @@ public static void main(String[]args){
 MainTest01(){
 	try{if(global==null)
 		global=this;
-		DB.Prop.tl().loadAsicsProps( "","",true );
-		Asic config=Asic.macs.get( "config" );
-		cnfg=config==null?null:config.vals;
+		DB.Prop.tl().loadAsicsProps( "","",true );//usr="" means current user , domain="" means current domain/house/ headOfCurrentUsr
+		Asic config=Asic.macs.get( "" );// mac=="" means local/thisHouse/headOfTheHouse
+		cnfg=config==null?null:config.vals.get( "" );// path=="" ::= configuration / HeadOfTheAsic
 
-		String prefix=cnfg("prefix","192.168.8.")
-			,house=cnfg("house","258");
+		String prefix=cnfg("prefix","192.168.8.");//,house=cnfg("house","258");
 		int startPort= cnfg("startPort",2)
 			,endPort= cnfg("endPort",255)//,sleep=Util.mapInt( cnfg,"sleep",2000)
-				 ;
+		;
 		scan=new AsicsScanner(prefix, startPort, endPort);
 		scan.start();
 	} catch (Exception e) {
@@ -34,7 +33,24 @@ MainTest01(){
 }
 
 boolean checkConfig(){
-	Map<String, DB.Prop.SD >v= DB.Prop.tl(). props(null,"","","config",cnfgLog);
+	DB.Prop.tl(). loadProps( null,"","","config",cnfgLog);//Map<String, DB.Prop.SD >v=
+	/*
+	reload::
+		asicSleep
+			(net,status,config,info )
+			(stop , <null>/inherit , <num:milli-seconds>)
+		scanSleep
+			(stop , <null>/inherit , <num:milli-seconds>)
+		configurationSleep
+			(stop , <null>/inherit , <num:milli-seconds>)
+		domainSleep
+			(stop , <null>/inherit , <num:milli-seconds>)
+
+	mac-specific
+	domain-specific
+
+
+	 */
 	return false;
 }
 

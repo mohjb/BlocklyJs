@@ -10,26 +10,32 @@ import java.net.URL;
 import java.net.URLConnection;
 //}
 class Asic extends Json{
-static Map<String,Asic>macs=new HashMap<String,Asic>();
 
 final static String Authorization=
 	"Digest username=\"root\", realm=\"antMiner Configuration\", nonce=\"b1b1652793d3109e9b29f0c3a111ffe5\", uri=\"/\", response=\"1fa4707b57aac3ad574bcd0f044f1cc8\", qop=auth, nc=00000001, cnonce=\"680d2ef66564dc19\"";
-URL base;int ip;String mac;char[] charArray = new char[16383];
-//State state=State.init;//enum State{init,detectAsic,invalidWallet,wallet,config,monitor};
 
-/**lastModified in Prop*/
-Date cnfgLog;
-Map<String,DB.Prop.SD>vals=new HashMap<String, DB.Prop.SD >();//Map<String,>
+	static Map<String,Asic>
+		macs=new HashMap<String,Asic>();
 
-interface Parse{public Map<String,DB.Prop.SD> parse(String prefix,String p); }
+	URL base;
+	int ip;
+	String mac;
+
+	LoadedBy state;enum LoadedBy{byIpScan,byDbMac};
+	char[] charArray = new char[16383];
+
+	/// **lastModified in Prop*/Date cnfgLog;
+	Map<String,Map<String,DB.Prop.SD>>vals=new HashMap<String, Map<String,DB.Prop.SD >>();
+
+interface Parse{public Map<String,DB.Prop.SD> parse(String p); }
 
 static class Parse0 implements Parse{
-	@Override public Map<String,DB.Prop.SD> parse(String prefix,String p) {return mss( prefix,p);}}
+	@Override public Map<String,DB.Prop.SD> parse(String p) {return mss( p);}}
 
 static class ParseConfig implements Parse{
-	@Override public Map<String,DB.Prop.SD> parse(String prefix,String p) {
+	@Override public Map<String,DB.Prop.SD> parse(String p) {
 		int i0=p.indexOf("{"),i1=p.indexOf("};");
-		return mss(prefix,p.substring(i0,i1+1));}}
+		return mss(p.substring(i0,i1+1));}}
 
 static Parse parse0=new Parse0()
 	,parseConfig=new ParseConfig()
@@ -46,25 +52,25 @@ enum Path{info("/cgi-bin/get_system_info.cgi",parse0)
 
 
 public Map<String,DB.Prop.SD> f(Path p)throws Exception{
-	String s=f0(p),ps=p.toString();
-	Map<String,DB.Prop.SD>m=filterNewVals( p.parse.parse(ps,s));
-	if(m!=null){
+	String asicStr=readAsic(p);//,ps=p.toString();//Map<String,DB.Prop.SD>o=vals.get(ps);//if(o==null)vals.put(ps,o=new HashMap<String, DB.Prop.SD >());
+	Map<String,DB.Prop.SD>chngs=filterChngs( p,asicStr);
+	if(chngs!=null){
 		if(mac==null){
-			mac=m.get(ps+".macaddr").s;//TODO: might be null, might change
+			mac=chngs.get("macaddr").s;//TODO: might be null, might change
 			if(mac==null)
 				mac=String.valueOf(System.currentTimeMillis());//:mac.replaceAll(":", "-");
 			macs.put( mac,this );
 		}
 		if(ip==0 || global.asics.get( ip )==null){
-			ip=Util.parseInt( m.get(ps+".ipaddress").s,ip);//TODO: might be null, might change
+			ip=Util.parseInt( chngs.get("ipaddress").s,ip);//TODO: might be null, might change
 			global.asics.put( ip,this );
 		}String house=global.cnfg("house","258") ;
-		for(String key:m.keySet())
-			DB.Prop.save( "",house,mac,p.toString()+'.'+key,m.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
+		for(String key:chngs.keySet())
+			DB.Prop.save( "",house,mac,p.toString(),key,chngs.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
 	}
-	return m;}
+	return chngs;}
 
-public String f0(Path p)throws Exception{
+public String readAsic(Path p)throws Exception{
 	URL url = new URL(base,p.s);
 	URLConnection urlConnection = url.openConnection();
 	urlConnection.setRequestProperty("Authorization", Authorization);
@@ -103,57 +109,67 @@ public void run(){
 	try{
 		startScan();
 		startMonitor();
+	}catch(java.net.ConnectException ex){
+		//error(ex,"Asic.run:java.net.ConnectException:",base);
+		global.asics.remove(ip);
 	}
-	// java.net.ConnectException
 	catch(Exception ex){
-		error(ex,"Asic.run",base);
+		error(ex,"Asic.run:Exception:",base);
 		global.asics.remove(ip);
 	}
 }
 
-public Asic(String ipPrefix,int ip){
+public Asic(LoadedBy p){state=p;}
+public Asic(String mac){this(LoadedBy.byDbMac);this.mac=mac;}
+public Asic(String ipPrefix,int ip){this(LoadedBy.byIpScan);init( ipPrefix,ip );}
+void init(String ipPrefix,int ip){
 	try{base=new URL("http",ipPrefix+(this.ip=ip),80,"");
 	}catch(Exception ex){error(ex,"Asic.<init>",ipPrefix,ip);}}
 
-public String toJson(){
-	String t="";try{t=jo()
-		                  .clrSW()
-		                  .w("{base:").o(base)
-		                  .w(",mac:").o(mac)
-		                  .w(",ip:").o(ip)
-		                  .w(",cnfgLog:").o(cnfgLog)
-		                  .w(",vals:").o(vals)
-		                  .w(",m:").o(m)
-		                  .w("}")////,state:\"",state,"\"
-		                  .toStrin_();}catch(Exception ex){
-		error(ex,"Asic.toJson");}
-	return t;}
+	public String toJson(){
+		String t="";try{t=jo()
+		.clrSW()
+		.w("{base:").o(base)
+		.w(",mac:").o(mac)
+		.w(",ip:").o(ip)
+		//.w(",cnfgLog:").o(cnfgLog)
+		.w(",vals:").o(vals)
+		.w(",m:").o(m)
+		.w("}")////,state:\"",state,"\"
+		.toStrin_();}catch(Exception ex){
+			error(ex,"Asic.toJson");}
+		return t;}
 
 public String toString(){return toJson();}
 
-public Map<String,DB.Prop.SD>filterNewVals( Map<String,DB.Prop.SD>newVals){//Map<String,DB.Prop.SD>prvVals,
-	Map<String,DB.Prop.SD>m=null;//boolean b=prvVals==null;
-	for(String key :newVals.keySet()){
-		DB.Prop.SD z=vals.get(key)
-			,o=newVals.get(key);
+public Map<String,DB.Prop.SD>filterChngs( Path p,String asicStr ){
+	Map<String,DB.Prop.SD>
+		asicVals=p.parse.parse(asicStr)
+		,vpm=vals.get(p.toString())
+		,chngs=null;
+	for(String key :asicVals.keySet()){
+		DB.Prop.SD z=vpm==null?null:vpm.get(key)
+			,o=asicVals.get(key);
 		if(z==null || !z.s.equals(o.s))
-		{	if(m==null)
-			m=new HashMap<String,DB.Prop.SD>();
-			m.put(key, o);
-			vals.put(key, o);
+		{	if( chngs==null)
+				chngs=new HashMap<String,DB.Prop.SD>();
+			chngs.put(key, o);
+			if(vpm== null)
+				vals.put(p.toString(),vpm=new HashMap< String, DB.Prop.SD >(  ));
+			vpm.put(key, o);
 		}
 	}
-	return m;}
+	return chngs;}
 
-static public Map<String,DB.Prop.SD>mss(String prefix,Map p){
-	if(p==null ) // || p.size()==0
-		return null;
-	Map<String,DB.Prop.SD>m=new HashMap<String,DB.Prop.SD>();//p instanceof Map<String,String>?(Map<String,String>)p: null;
-	Json.Output jo=null;Date now=new Date();
-	prefix=(prefix==null||prefix.trim().length()==0)?"":prefix.trim()+'.';
-	for(Object k:p.keySet()){
-		Object o=p.get(k);
-		String key=k==null?prefix:prefix+k
+	static public Map<String,DB.Prop.SD>mss(Map p){
+		if(p==null ) // || p.size()==0
+			return null;
+		Map<String,DB.Prop.SD>m=new HashMap<String,DB.Prop.SD>();//p instanceof Map<String,String>?(Map<String,String>)p: null;
+		Json.Output jo=null;Date now=new Date();
+		//prefix=(prefix==null||prefix.trim().length()==0)?"":prefix.trim()+'.';
+		for(Object k:p.keySet()){
+			Object o=p.get(k);
+			String key=k==null?"":k.toString()//prefix:prefix+k
 			,s=o instanceof String?(String)o:null;
 		if(s==null&&o!=null)try{
 			if(jo==null)
@@ -164,16 +180,16 @@ static public Map<String,DB.Prop.SD>mss(String prefix,Map p){
 	}
 	return m;}
 
-static public Map<String,DB.Prop.SD>mss(String prefix,String p){
-	Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){}
-	Map m=o==null?null:o instanceof Map?(Map)o:Json.Util.mapCreate("",o);
-	return mss(prefix,m);}
+	static public Map<String,DB.Prop.SD>mss(String p){
+		Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){}
+		Map m=o==null?null:o instanceof Map?(Map)o:Json.Util.mapCreate("",o);
+		return mss(m);}
 
 static class ParseStatus implements Parse{
-	@Override public Map<String,DB.Prop.SD>parse(String prefix,String s) {
+	@Override public Map<String,DB.Prop.SD>parse(String s) {
 		Map<String,DB.Prop.SD>r=null;try{
 			ParseStatus p=new ParseStatus(s);
-			r=p.filterMss(prefix);
+			r=p.filterMss();
 			p.doc.fina();p.doc=null;p.ids.clear();p.ids=null;
 		}catch ( Exception x ){
 			error(x,"Asic.ParseStatus.parse");}
@@ -186,8 +202,8 @@ static class ParseStatus implements Parse{
 		doc=new Elem(s);
 	}
 
-	public Map<String,DB.Prop.SD>filterMss(String prefix){
-		prefix=prefix==null||prefix.length()<1?"":prefix+'.';
+	public Map<String,DB.Prop.SD>filterMss(){
+		//prefix=prefix==null||prefix.length()<1?"":prefix+'.';
 		Map<String,DB.Prop.SD>m=new HashMap<String,DB.Prop.SD>();
 		Date now=new Date();
 		for(String key :ids.keySet()){
@@ -199,7 +215,8 @@ static class ParseStatus implements Parse{
 					if(s!=null){
 						s=s.trim();
 						if( s.length()>0)
-							m.put(prefix+key+'.'+i, new DB.Prop.SD(s,now));
+							m.put(//prefix+
+								key+'.'+i, new DB.Prop.SD(s,now));
 					}}
 			}
 			else if(o instanceof Elem){
@@ -208,7 +225,8 @@ static class ParseStatus implements Parse{
 				if(s!=null){
 					s=s.trim();
 					if( s.length()>0)
-						m.put(prefix+key, new DB.Prop.SD(s,now));
+						m.put(//prefix+
+							key, new DB.Prop.SD(s,now));
 				}}
 		}
 		return m;}
@@ -306,25 +324,25 @@ static class ParseStatus implements Parse{
 			int iz=s.indexOf('<');
 			headEnd=s.indexOf("id=\"");
 
-			firstChild=iz==0?
-				           new Elem(doc):
-				           new Nd(doc,iz);
-			if(iz==0)nextSibling.parse();
-			while(nextSibling.end!=-1&&i<end&&nextSibling.end<end){//int j=c.end;
-				iz=s.indexOf('<',i);
-				boolean b=iz-i<2 &&iz>=0;
-				nextSibling=b?new Elem(doc):new Nd(doc,i,iz);
-				if(b)nextSibling.parse();
+				firstChild=iz==0?
+					new Elem(doc):
+					new Nd(doc,iz);
+				if(iz==0)nextSibling.parse();
+				while(nextSibling.end!=-1&&i<end&&nextSibling.end<end){//int j=c.end;
+					iz=s.indexOf('<',i);
+					boolean b=iz-i<2 &&iz>=0;
+					nextSibling=b?new Elem(doc):new Nd(doc,i,iz);
+					if(b)nextSibling.parse();
+				}
 			}
-		}
 
-		Nd parse(){
-			headEnd=close=end=ixOf('>',i);
-			char ch=chr(i+1);
-			if(ch=='?' || ch=='!'){
-				if( ch=='!'
-					    && chr(i+2)=='-'
-					    && chr(i+3)=='-'
+			Nd parse(){
+				headEnd=close=end=ixOf('>',i);
+				char ch=chr(i+1);
+				if(ch=='?' || ch=='!'){
+					if( ch=='!'
+						&& chr(i+2)=='-'
+						&& chr(i+3)=='-'
 					){	headEnd=close=ixOf("-->",i+6);
 					doc.i=(end=close+2)+1;
 				}else doc.i=end;
