@@ -55,7 +55,7 @@ boolean checkConfig(){
 
 String cnfg(String prop,String defVal){
 	//int i=prop.indexOf( '.' );	String c=i==-1?prop:prop.substring( 0,i )		,p=i==-1?prop:prop.substring( i+1 );	Map<String,String>x=cnfg.get( c );
-	DB.Prop.SD o=cnfg.get( prop );//x!=null?x.get( p ):x;
+	DB.Prop.SD o=cnfg==null?null:cnfg.get( prop );//x!=null?x.get( p ):x;
 	return o==null?defVal:o.s;}
 
 int cnfg(String prop,int defVal){

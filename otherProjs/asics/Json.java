@@ -837,10 +837,10 @@ public static class DB {
 		public static void close( ResultSet r, boolean closeC ) {
 			if ( r != null ) try {
 				Statement s = r.getStatement();
-				Connection c = closeC ? s.getConnection() : null;
+				//Connection c = closeC ? s.getConnection() : null;
 				r.close();
 				s.close();
-				if ( closeC ) c.close();
+				if ( closeC )close();//{ Json t=tl();t.conn.close();t.conn=null;}
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
@@ -861,7 +861,7 @@ public static class DB {
 				s = R( sql, p );
 				r = s.next() ? s.getString( 1 ) : null;
 			} finally {
-				close( s, true );
+				close( s );
 			}
 			return r;
 		}//CHANGED:2015.10.23.16.06:closeRS ; CHANGED:2011.01.24.04.07 ADDED close(s,dbc());
@@ -884,7 +884,7 @@ public static class DB {
 				s = R( sql, p );
 				return s.next() ? s.getObject( 1 ) : null;
 			} finally {
-				close( s, true );
+				close( s);
 			}
 
 	/*public static <T>T q1(String sql,Class<T>t,Object[]p)throws SQLException {
@@ -895,7 +895,7 @@ public static class DB {
 				x=(T)s.getObject(1,t);
 			return x;
 		}finally{
-			close(s,true);}
+			close(s);}
 	}*/
 		}
 
@@ -913,7 +913,7 @@ public static class DB {
 				s = R( sql, p );
 				return s.next() ? s.getInt( 1 ) : df;
 			} finally {
-				close( s, true );
+				close( s);
 			}
 		}//CHANGED:2015.10.23.16.06:closeRS ;
 
@@ -927,7 +927,7 @@ public static class DB {
 				s = R( sql, p );
 				return s.next() ? s.getDouble( 1 ) : df;
 			} finally {
-				close( s, true );
+				close( s);
 			}
 		}//CHANGED:2015.10.23.16.06:closeRS ;
 
@@ -983,7 +983,7 @@ public static class DB {
 				}
 				return r;
 			} finally {
-				close( s, true );//CHANGED:2015.10.23.16.06:closeRS ;
+				close( s);//CHANGED:2015.10.23.16.06:closeRS ;
 				//if(logOut)try{t.log(t.jo().w(Name).w(".DB.L:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){error(x,"DB.List:",sql);}
 			}
 		}
@@ -1007,7 +1007,7 @@ public static class DB {
 				}
 				return r;
 			} finally {
-				close( s, true );
+				close( s);
 				//if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.Lt:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.Lt:",sql);}
 			}
 		}
@@ -1021,7 +1021,7 @@ public static class DB {
 				while ( s.next() ) r.add( s.getObject( 1 ) );
 				return r;
 			} finally {
-				close( s, true );
+				close( s );
 				//TL t=tl();if(logOut)try{t.log(t.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
 				//.o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){t.error(x,Name,".DB.q1colList:",sql);}
 			}
@@ -1077,7 +1077,7 @@ public static class DB {
 				}
 				return a;
 			} finally {
-				close( s, true );
+				close( s);
 			}//CHANGED:2015.10.23.16.06:closeRS ;
 		}
 
@@ -1119,7 +1119,7 @@ public static class DB {
 					e.printStackTrace();
 				}
 			} finally {
-				close( s, true );
+				close( s);
 				//if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.L:q2json=").o(sql).w(",prms=").o(p).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.q1json:",sql);}
 			}
 		}
@@ -1177,7 +1177,7 @@ public static class DB {
 				boolean b = false;
 				try {
 					if ( b = row != null && row.rs != null && row.rs.next() ) row.row++;
-					else close( row.rs, true );//CHANGED:2015.10.23.16.06:closeRS ; 2017.7.17
+					else close( row.rs);//CHANGED:2015.10.23.16.06:closeRS ; 2017.7.17
 				} catch ( SQLException e ) {//TL t=TL.tl();//changed 2016.06.27 18:05final String str=Name+".DB.ItTbl.next";t.error(e,str);List l=(List)t.json.get(ErrorsList);if(l==null)t.json.put(ErrorsList,l=new LinkedList());l.add(Json.Util.lst(str,row!=null?row.row:-1,e));
 					error( e, this );
 				}
@@ -1553,7 +1553,7 @@ public static class DB {
 				if(r.next())load(r);
 				else{error(null,Name,".DB.Tbl(",this,").load(pk=",pk,"):resultset.next=false");nullify();}}
 			catch(Exception x){error(x,Name,".DB.Tbl(",this,"):",pk);}
-			finally{D.close(r,true);}
+			finally{D.close(r);}
 			return this;}
 
 		public Tbl nullify(){return nullify(fields());}
@@ -1641,7 +1641,7 @@ public static class DB {
 				}
 				try{t.load(rs,a);}catch(Exception x){
 					error(x,Name,".DB.Tbl(",this,").Itrtr.next:i=",i,":",rs);
-					D.close(rs,true);rs=null;
+					D.close(rs);rs=null;
 				}
 				return t;}
 
