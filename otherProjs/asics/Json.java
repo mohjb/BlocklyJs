@@ -1792,15 +1792,19 @@ public static class DB {
 
 		@Override public List creationDBTIndices(){
 			final String V="varchar(255) NOT NULL DEFAULT '??' ";
-			return Util.lst(Util.lst(
+			return Util.lst
+			(Util.lst(
 				"int(36) not null primary key auto_increment"
 				,"TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
 				,V,V,V,V,V,"text"
-				),Util.lst("unique(`"+C.usr+"`,`"+C.mac+"`,`"+C.prop+"`)"
-				,"index(`"+C.usr+"`,`"+C.log+"`)"
-				,"index(`"+C.usr+"`,`"+C.mac+"`,`"+C.log+"`)"
-				,"index(`"+C.usr+"`,`"+C.domain+"`,`"+C.log+"`)"
-				,"index(`"+C.usr+"`,`"+C.prop+"`,`"+C.log+"`)"
+				)
+				,Util.lst("unique(`"+C.usr+"`,`"+C.mac+"`,`"+C.path+"`,`"+C.prop+"`)"
+					,Util.lst(C.usr,C.log   )
+					,Util.lst(C.usr,C.mac   ,C.log  )
+					,Util.lst(C.usr,C.domain,C.log  )
+					,Util.lst(C.usr,C.path  ,C.log  )
+					,Util.lst(C.usr,C.prop  ,C.log  )
+					,Util.lst(C.usr,C.path,C.prop,C.log )
 				)
 			);//val
 		/*
@@ -1813,11 +1817,13 @@ public static class DB {
 		,`path`	varchar(255) NOT NULL DEFAULT '??'
 		,`prop`	varchar(255) NOT NULL DEFAULT '??'
 		,`val`	text
-		,unique(`usr`,`mac`,`prop`)
-		,index (`usr`,`log`)
-		,index (`usr`,`mac`,`log`)
-		,index (`usr`,`domain`,`log`)
-		,index (`usr`,`prop`,`log`)
+		,unique(`usr`,`mac`,`path`,`prop`)
+		,index (`usr`,`log` )
+		,index (`usr`,`mac`     ,`log`)
+		,index (`usr`,`domain`  ,`log`)
+		,index (`usr`,`path`    ,`log`)
+		,index (`usr`,`prop`    ,`log`)
+		,index (`usr`,`path`,`prop`,`log`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		*/
 		}
@@ -1870,12 +1876,21 @@ public static class DB {
 				for(Object o:a)try{
 					String mac=o==null?null:o.toString();
 					if(mac==null)continue;
-					Asic x=new Asic( mac );
-					if(isInitMacs)Asic.macs.put( mac,x );
+					Asic x=isInitMacs?Asic.macs.get( mac):new Asic( mac );
+					boolean exists=x!=null;
+					if(isInitMacs)Asic.macs.put( mac,exists?x:new Asic( mac ) );
+					else if(!exists)x=new Asic( mac );
 					m.add( x );
+					if(!exists)
 					x.vals=loadProps(x.vals, usr,domain,mac,new Date(0) );
-				}catch ( Exception x ){}
-			}catch ( Exception x ){}
+					else//TODO: merge db-vals with live-vals
+						x.mergeProps(loadProps(null, usr,domain,mac,new Date(0) ));
+				}catch ( Exception x ){
+					error(x,"Json.DB.Prop.loadAsicsProps:for:");
+				}
+			}catch ( Exception x ){
+				error(x,"Json.DB.Prop.loadAsicsProps:");
+			}
 			return m;
 		}
 

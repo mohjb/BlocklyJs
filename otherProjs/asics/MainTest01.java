@@ -5,8 +5,7 @@ import java.io.File;
 
 public class MainTest01 extends Json{
 static String baseDir;//static MainTest01 global;
-AsicsScanner scan; //Date now;
-Map<Integer,Asic>asics=new HashMap<Integer,Asic>();
+AsicsScanner scan;
 Map<String, DB.Prop.SD > cnfg;Date cnfgLog;
 public static void main(String[]args){
 	try{baseDir=new File("./output/").getCanonicalPath();
@@ -70,11 +69,12 @@ class AsicsScanner  extends Json{
 
 	public void startScan(){
 		for(int ip=ports[0];ip<=ports[1];ip++)try{
-			if(asics.get( ip )==null){
+			if(Asic.asics.get( ip )==null){
 				Asic asic=new Asic(prefix,ip);
-				asics.put(ip,asic);
+				Asic.asics.put(ip,asic);
 				asic.start();
-				log("AsicsScanner .startScan:",asic);}
+				//log("AsicsScanner .startScan:",asic);
+				}
 		}catch(Exception x){
 			error(x,"AsicsScanner.startScan:",ip);
 			//asics.remove(o)

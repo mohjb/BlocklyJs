@@ -17,6 +17,8 @@ final static String Authorization=
 	static Map<String,Asic>
 		macs=new HashMap<String,Asic>();
 
+	static Map<Integer,Asic>asics=new HashMap<Integer,Asic>();
+
 	URL base;
 	int ip;
 	String mac;
@@ -51,7 +53,7 @@ enum Path{info("/cgi-bin/get_system_info.cgi",parse0)
 }
 
 
-public Map<String,DB.Prop.SD> f(Path p)throws Exception{
+public Map<String,DB.Prop.SD> check(Path p)throws Exception{
 	String asicStr=readAsic(p);//,ps=p.toString();//Map<String,DB.Prop.SD>o=vals.get(ps);//if(o==null)vals.put(ps,o=new HashMap<String, DB.Prop.SD >());
 	Map<String,DB.Prop.SD>chngs=filterChngs( p,asicStr);
 	if(chngs!=null){
@@ -61,9 +63,9 @@ public Map<String,DB.Prop.SD> f(Path p)throws Exception{
 				mac=String.valueOf(System.currentTimeMillis());//:mac.replaceAll(":", "-");
 			macs.put( mac,this );
 		}
-		if(ip==0 || global.asics.get( ip )==null){
+		if(ip==0 || asics.get( ip )==null){
 			ip=Util.parseInt( chngs.get("ipaddress").s,ip);//TODO: might be null, might change
-			global.asics.put( ip,this );
+			asics.put( ip,this );
 		}String house=global.cnfg("house","258") ;
 		for(String key:chngs.keySet())
 			DB.Prop.save( "",house,mac,p.toString(),key,chngs.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
@@ -85,21 +87,19 @@ public String readAsic(Path p)throws Exception{
 	//DB.log w(ip+"/",global.now,p.toString(),".html",p.parse.parse(result));
 }
 
-public void startScan()throws Exception{
-	f(Path.net);//global.scan.asics.remove(this);global.asics.add(this);
-}
 
 public void startMonitor(){
 	long time=System.currentTimeMillis()+1000*30;
 	while(mac!=null && time>=System.currentTimeMillis())
 		try{for(Path p:Path.values())
-			f(p);
+			check(p);
+			DB.D.close();
 			Thread.sleep(Util.mapInt( global.cnfg,"sleep",2000));
 		}catch(Exception ex){
 			if(macs.get( mac )==this)
 				macs.remove( mac );
-			if(global.asics.get( ip )==this)
-				global.asics.remove( ip );
+			if(asics.get( ip )==this)
+				asics.remove( ip );
 			mac=null;
 			error(ex,"Asic.startMonitor",base);
 		}//,ipPrefix,p
@@ -107,15 +107,15 @@ public void startMonitor(){
 
 public void run(){
 	try{
-		startScan();
+		check(Path.net);
 		startMonitor();
 	}catch(java.net.ConnectException ex){
 		//error(ex,"Asic.run:java.net.ConnectException:",base);
-		global.asics.remove(ip);
+		asics.remove(ip);
 	}
 	catch(Exception ex){
 		error(ex,"Asic.run:Exception:",base);
-		global.asics.remove(ip);
+		asics.remove(ip);
 	}
 }
 
@@ -160,6 +160,33 @@ public Map<String,DB.Prop.SD>filterChngs( Path p,String asicStr ){
 		}
 	}
 	return chngs;}
+
+	void mergeProps(Map<String,Map<String, DB.Prop.SD>>p){
+		for(String c:p.keySet()){
+			Map<String, DB.Prop.SD>m=p.get(c)
+				,vm=vals.get(c);
+			if(vm==null)
+				vals.put(c,vm=new HashMap<>());
+			for(String k:m.keySet()){
+				DB.Prop.SD d=m.get(k),vd=vm.get(k);
+				if(vd==null)
+					vm.put(k,d);
+			}
+		}
+	}
+
+	Date latest(){
+		Date r=null;
+		for(String c:vals.keySet()){
+			Map<String, DB.Prop.SD>m=vals.get(c);
+			for(String k:m.keySet()){
+				DB.Prop.SD d=m.get(k);
+				if(r==null || d.d.after(r))
+					r=d.d;
+			}
+		}
+		return r;
+	}
 
 	static public Map<String,DB.Prop.SD>mss(Map p){
 		if(p==null ) // || p.size()==0
