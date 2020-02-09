@@ -824,8 +824,7 @@ public static class DB {
 		 */
 		public static ResultSet R( String sql, Object[] p ) throws SQLException {
 			PreparedStatement x = P( sql, p, true );
-			ResultSet r = x.executeQuery();
-			//push(r,tl());
+			ResultSet r = x.executeQuery();//push(r,tl());
 			return r;
 		}
 
@@ -1874,9 +1873,8 @@ public static class DB {
 				where(C.usr,usr
 					, C.domain,domain
 					, C.mac,mac
-					,Util.lst( C.log,Co.gt,log) )) )
-			{	//int i=prop.indexOf( '.' );String c=i==-1?prop:prop.substring( 0,i ),p=i==-1?prop:prop.substring( i+1 );
-				Map<String,SD>x=m.get( path );
+					,Util.lst( C.log,Co.gt,log),log )) )
+			{	Map<String,SD>x=m.get( path );
 				if(x==null)m.put(path,x=new HashMap<String,SD>());
 				x.put( prop,new SD(val,log) );
 			}
