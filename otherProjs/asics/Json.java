@@ -34,7 +34,7 @@ import java.sql.ResultSetMetaData	;
 import java.sql.SQLException		;
 
 import com.mysql.jdbc.jdbc2.optional
-	       .MysqlConnectionPoolDataSource;
+		   .MysqlConnectionPoolDataSource;
 //}
 
 public abstract class Json extends Thread{
@@ -141,8 +141,8 @@ public static class Output { public Writer w;
 		else if(a instanceof Throwable)oThrbl((Throwable)a,ind);
 		else if(a instanceof java.util.UUID)w("\"").p(a.toString()).w(c?"\"/*uuid*/":"\"");
 		else{w("{\"class\":").oStr(a.getClass().getName(),ind)
-			     .w(",\"str\":").oStr(String.valueOf(a),ind)
-			     .w(",\"hashCode\":").oStr(Long.toHexString(a.hashCode()),ind);
+				 .w(",\"str\":").oStr(String.valueOf(a),ind)
+				 .w(",\"hashCode\":").oStr(Long.toHexString(a.hashCode()),ind);
 			if(c)w("}//Object&cachePath=\"").p(path).w("\"\n").p(ind);
 			else w("}");}return this;}
 
@@ -231,11 +231,11 @@ public static class Output { public Writer w;
 		while(e.hasNext()){k=e.next();v=o.get(k);w(",");
 			o(k,ind,c?path+k:path);w(":");o(v,ind,c?path+k:path);}
 		if(c) w("}//")
-			      .p(o.getClass().getName())
-			      .w("&cachePath=\"")
-			      .p(path)
-			      .w("\"\n")
-			      .p(ind);else w("}");
+				  .p(o.getClass().getName())
+				  .w("&cachePath=\"")
+				  .p(path)
+				  .w("\"\n")
+				  .p(ind);else w("}");
 		return this;}
 
 	Output oBean(Object o,String ind,String path)
@@ -367,7 +367,7 @@ public static class Prsr {
 			default:r=extractIdentifier();
 		}skipRWS();//skipWhiteSpace();
 		if(comments!=null&&((i=comments.indexOf("cachePath=\""))!=-1
-			                    ||(cache!=null&&comments.startsWith("cacheReference"))))
+								||(cache!=null&&comments.startsWith("cacheReference"))))
 		{	if(i!=-1)
 		{	if(cache==null)
 			cache=new HashMap<String,Object>();
@@ -386,15 +386,15 @@ public static class Prsr {
 		{case 'n':buff('\n');break;case 't':buff('\t');break;
 			case 'r':buff('\r');break;case '0':buff('\0');break;
 			case 'x':case 'X':buff( (char)
-				                        java.lang.Integer.parseInt(
-					                        next(2)//p.substring(offset,offset+2)
-					                        ,16));nxt();//next();
+										java.lang.Integer.parseInt(
+											next(2)//p.substring(offset,offset+2)
+											,16));nxt();//next();
 			break;
 			case 'u':
 			case 'U':buff( (char)
-				               java.lang.Integer.parseInt(
-					               next(4)//p.substring(offset,offset+4)
-					               ,16));//next();next();next();//next();
+							   java.lang.Integer.parseInt(
+								   next(4)//p.substring(offset,offset+4)
+								   ,16));//next();next();next();//next();
 				break;default:if(c!='\0')buff(c);}}
 		else buff(c);
 			nxt();b=c!=first&&c!='\0';
@@ -407,16 +407,16 @@ public static class Prsr {
 		while(c!='\0'&&Character.isUnicodeIdentifierPart(c))bNxt();
 		String r=consume();
 		return "true".equals(r)?Boolean.TRUE
-			       :"false".equals(r)?Boolean.FALSE
-				        :"null".equals(r)?Literal.Null:"undefined".equals(r)?Literal.Undefined:r;}
+				   :"false".equals(r)?Boolean.FALSE
+						:"null".equals(r)?Literal.Null:"undefined".equals(r)?Literal.Undefined:r;}
 
 	public Object extractDigits(){
 		if(c=='0')//&&offset+1<len)
 		{char c2=peek();if(c2=='x'||c2=='X')
 		{nxt();nxt();
 			while((c>='A'&&c<='F')
-				      ||(c>='a'&&c<='f')
-				      ||Character.isDigit(c))bNxt();
+					  ||(c>='a'&&c<='f')
+					  ||Character.isDigit(c))bNxt();
 			String s=consume();
 			try{return Long.parseLong(s,16);}
 			catch(Exception ex){}return s;}
@@ -567,8 +567,8 @@ public static class Prsr {
 					lookahead.append(c);
 				}
 			}while( (b=(c==h ||
-				            Character.toUpperCase(c)==
-					            Character.toUpperCase(h))
+							Character.toUpperCase(c)==
+								Character.toUpperCase(h))
 			)&& (++i)<pn );
 		return b;}
 
@@ -1012,11 +1012,18 @@ public static class DB {
 			}
 		}
 
+		public static Object[] q1col( String sql, Object... p ) throws SQLException {
+			List< Object > l = q1colList( sql, p );
+			Object r[] = new Object[ l.size() ];
+			l.toArray( r );
+			l.clear();
+			return r;
+		}
+
 		public static List< Object > q1colList( String sql, Object... p ) throws SQLException {
 			ResultSet s = null;
 			List< Object > r = null;
-			try {
-				s = R( sql, p );
+			try{s = R( sql, p );
 				r = new LinkedList< Object >();
 				while ( s.next() ) r.add( s.getObject( 1 ) );
 				return r;
@@ -1025,30 +1032,40 @@ public static class DB {
 				//TL t=tl();if(logOut)try{t.log(t.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
 				//.o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){t.error(x,Name,".DB.q1colList:",sql);}
 			}
-
-
-/*	public static <T>List<T> q1colTList(String sql,Class<T>t,Object...p)throws SQLException
-	{ResultSet s=null;List<T> r=null;try{s=R(sql,p);r=new LinkedList<T>();//Class<T>t=null;
-		while(s.next())r.add(
-			s.getObject(1,t)
-			//s.getObject(1)
-		);return r;}
-		finally{close(s,true //tl
-			);//TL tl=tl();if(tl.h.logOut)try{tl.log(tl.jo().w(Name).w(".DB.q1colList:sql=")//CHANGED:2015.10.23.16.06:closeRS ;
-		//.o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){tl.error(x,Name,".DB.q1colList:",sql);}
-	}}
-	public static <T>T[] q1colT(String sql,Class<T>t,Object...p)throws SQLException
-	{List<T> l=q1colTList(sql,t,p);T[]r=(T[]) java.lang.reflect.Array.newInstance(t,l.size());l.toArray(r);l.clear();return r;}
-*/
 		}
 
-		public static Object[] q1col( String sql, Object... p ) throws SQLException {
-			List< Object > l = q1colList( sql, p );
-			Object r[] = new Object[ l.size() ];
-			l.toArray( r );
+		public static <T>List<T> q1colTList(String sql,Class<T>t,Object...p)throws SQLException
+		{ResultSet s=null;List<T> r=null;try{
+			s=R(sql,p);r=new LinkedList<T>();//Class<T>t=null;
+			while(s.next()){
+				T x=s.getObject(1,t);//s.getObject(1)
+				r.add( x );}
+				return r;}
+		finally{close(s);if(logOut)//try{
+			log(Name,".DB.q1colTList:sql=",//CHANGED:2015.10.23.16.06:closeRS ;
+				sql,",prms=",p,",return=",r);//}catch(Exception x){}
+		}}
+
+		public static <T extends Tbl>List<T> qTbl(String sql,Tbl t ,Object...p)throws SQLException{return qTBl(sql,t,p);}
+		public static <T extends Tbl>List<T> qTBl(String sql,Tbl t,Object[]p)throws SQLException {
+			ResultSet s=null;List<T> r=null;try{s=R(sql,p);r=new LinkedList<T>();
+			while(s.next())try{
+				T z=(T)t.newInst();
+				z.load(s);
+				r.add(z);
+			}catch(Exception ex){}
+			return r;}
+		finally{close(s);}}
+
+		public static <T extends Tbl> T[]query(String sql,T t, Object...p)throws SQLException {
+			List<T>l=qTBl(sql,t,p);
+			T[]r=(T[]) java.lang.reflect.Array.newInstance(t.getClass(),l.size());
+			l.toArray(r);
 			l.clear();
-			return r;
-		}
+			return r;}
+
+		public static <T>T[] q1colT(String sql,Class<T>t,Object...p)throws SQLException {
+			List<T> l=q1colTList(sql,t,p);T[]r=(T[]) java.lang.reflect.Array.newInstance(t,l.size());l.toArray(r);l.clear();return r;}
 
 
 		/**
@@ -1092,17 +1109,15 @@ public static class DB {
 
 		public static int X( String sql, Object[] p ) throws SQLException {
 			int r = -1;
-			Connection c = null;
 			PreparedStatement s = null;
 			try {
 				s = P( sql, p, false );
 				r = s.executeUpdate();
-				c = s.getConnection();
 				return r;
 			} finally {
 				s.close();
-				c.close();
-				//TL t=tl();if(logOut)try{t.log(t.jo().w(Name).w(".DB.x:sql=").o(sql).w(",prms=").o(p).w(",return=").o(r).toStrin_());}catch(IOException x){t.error(x,Name,".DB.X:",sql);}
+				if(logOut)//try{
+					log(Name,".DB.x:sql=",sql,",prms=",p,",return=",r);//}catch(IOException x){}
 			}
 		}
 
@@ -1458,7 +1473,7 @@ public static class DB {
 					error(ex, Name+".DB.Tbl.checkTableCreation:check-pt1:",dtn);}
 			List l=(List)o;
 			try{if(o==null||(!l.contains( dtn )&&!l.contains( dtn.toLowerCase()))
-				    ){
+					){
 				StringBuilder sql= new StringBuilder("CREATE TABLE `").append(dtn).append("` (\n");
 				CI[]ci=columns();int an,x=0;
 				List a=creationDBTIndices(),b=(List)a.get(0);
@@ -1869,19 +1884,19 @@ public static class DB {
 
 		List<Asic>loadAsicsProps(String usr,String domain,boolean isInitMacs){
 			List<Asic>m=new LinkedList<Asic>();
-			try{Object[]a=D.q1col( "select `"+C.mac+"` from `"
-				+dbtName+"` where `"+C.usr+"`=? and  `"+C.domain
-				+"`=? group by `"+C.mac+"`",usr,domain );
+			try{String sql="select `"+C.mac+"` from `"
+					+dbtName+"` where `"+C.usr+"`=? and  `"+C.domain
+					+"`=? group by `"+C.mac+"`";//Object[]a=D.q1col( sql,usr,domain );
+				List<String>a=D.q1colTList(sql,String.class,usr,domain);
 
-				for(Object o:a)try{
-					String mac=o==null?null:o.toString();
-					if(mac==null)continue;
+				for(String mac:a)try{
+					//String mac=o==null?null:o.toString();if(mac==null)continue;
 					Asic x=isInitMacs?Asic.macs.get( mac):new Asic( mac );
 					boolean exists=x!=null;
 					if(isInitMacs)Asic.macs.put( mac,exists?x:new Asic( mac ) );
 					else if(!exists)x=new Asic( mac );
 					m.add( x );
-					if(!exists)
+					if(!isInitMacs||!exists)
 					x.vals=loadProps(x.vals, usr,domain,mac,new Date(0) );
 					else//TODO: merge db-vals with live-vals
 						x.mergeProps(loadProps(null, usr,domain,mac,new Date(0) ));
