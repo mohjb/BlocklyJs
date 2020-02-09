@@ -63,7 +63,7 @@ public Map<String,DB.Prop.SD> check(Path p)throws Exception{
 				mac=String.valueOf(System.currentTimeMillis());//:mac.replaceAll(":", "-");
 			macs.put( mac,this );
 		}
-		if(ip==0 || asics.get( ip )==null){
+		if(ip<=0 || asics.get( ip )==null){
 			ip=Util.parseInt( chngs.get("ipaddress").s,ip);//TODO: might be null, might change
 			asics.put( ip,this );
 		}String house=global.cnfg("house","258") ;
@@ -89,19 +89,19 @@ public String readAsic(Path p)throws Exception{
 
 
 public void startMonitor(){
-	long time=System.currentTimeMillis()+1000*30;
-	while(mac!=null && time>=System.currentTimeMillis())
+	//long time=System.currentTimeMillis()+1000*30;
+	while(mac!=null )//&& time>=System.currentTimeMillis())
 		try{for(Path p:Path.values())
 			check(p);
 			DB.D.close();
-			Thread.sleep(Util.mapInt( global.cnfg,"sleep",2000));
+			Thread.sleep(global.cnfg("sleep",2000));//Util.mapInt( global.cnfg,"sleep",2000));
 		}catch(Exception ex){
 			if(macs.get( mac )==this)
 				macs.remove( mac );
 			if(asics.get( ip )==this)
 				asics.remove( ip );
-			mac=null;
 			error(ex,"Asic.startMonitor",base);
+			mac=null;
 		}//,ipPrefix,p
 }
 

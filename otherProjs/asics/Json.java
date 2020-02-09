@@ -722,7 +722,7 @@ public static class DB {
 	}//context
 
 	final static String Name="moh";
-	final static boolean logOut=false;
+	final static boolean logOut=true;
 
 	public static class D {
 
@@ -1887,7 +1887,7 @@ public static class DB {
 			try{String sql="select `"+C.mac+"` from `"
 					+dbtName+"` where `"+C.usr+"`=? and  `"+C.domain
 					+"`=? group by `"+C.mac+"`";//Object[]a=D.q1col( sql,usr,domain );
-				List<String>a=D.q1colTList(sql,String.class,usr,domain);
+				List<String>a=D.q1colTList(sql,String.class,C.usr,usr,C.domain,domain);
 
 				for(String mac:a)try{
 					//String mac=o==null?null:o.toString();if(mac==null)continue;
@@ -1912,7 +1912,7 @@ public static class DB {
 		public static Prop tl(){
 			Json t=Json.tl();
 			if(t.prop==null){
-				t.prop=new Prop();check();//x.checkDBTCreation();
+				t.prop=new Prop();Log.tl();check();//x.checkDBTCreation();
 			}
 			return t.prop;
 		}

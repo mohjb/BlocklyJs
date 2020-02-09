@@ -6,7 +6,7 @@ import java.io.File;
 public class MainTest01 extends Json{
 static String baseDir;//static MainTest01 global;
 AsicsScanner scan;
-Map<String, DB.Prop.SD > cnfg;Date cnfgLog;
+Asic head;long cnfgCheckFrequency=1000*10;//Map<String, DB.Prop.SD > cnfg;Date cnfgLog;
 public static void main(String[]args){
 	try{baseDir=new File("./output/").getCanonicalPath();
 		System.out.println("baseDir="+baseDir);
@@ -17,10 +17,29 @@ public static void main(String[]args){
 MainTest01(){
 	try{if(global==null)
 		global=this;
-		DB.Prop.tl().loadAsicsProps( "","",true );//usr="" means current user , domain="" means current domain/house/ headOfCurrentUsr
-		Asic config=Asic.macs.get( "" );// mac=="" means local/thisHouse/headOfTheHouse
-		cnfg=config==null?null:config.vals.get( "" );// path=="" ::= configuration / HeadOfTheAsic
-
+		head=new Asic(Asic.LoadedBy.byDbMac);
+		head.vals=DB.Prop.tl().loadProps(head.vals,"","","",new Date(0));
+		cnfgCheckFrequency=cnfg("configCheckFrequency",(int)cnfgCheckFrequency);
+		String domain=cnfg("domain","258");
+		List<Asic>l=DB.Prop.tl().loadAsicsProps( "",domain,true );//usr="" means current user , domain="" means current domain/house/ headOfCurrentUsr
+		//Asic config=Asic.macs.get( "" );// mac=="" means local/thisHouse/headOfTheHouse
+		//cnfg=config==null?null:config.vals.get( "" );// path=="" ::= configuration / HeadOfTheAsic
+		if(l!=null)for(Asic asic:l){
+			if(asic.base==null){
+				DB.Prop.SD d=asic.vals.get("net").get("ipaddress");
+				int i=d.s.lastIndexOf('.')
+				,ip=Util.parseInt(d.s.substring(i+1),-1);
+				String s=d.s.substring(0,i+1);
+				asic.init(s,ip);
+			}
+			if(asic.ip>0){
+				Asic.asics.put(asic.ip,asic);
+				/*if(asic.mac==null){
+					DB.Prop.SD d=asic.vals.get("net").get("macaddr");
+					asic.mac=d.s;
+					Asic.macs.put(asic.mac,asic);}*/
+				asic.start();}
+		}
 		String prefix=cnfg("prefix","192.168.8.");//,house=cnfg("house","258");
 		int startPort= cnfg("startPort",2)
 			,endPort= cnfg("endPort",255)//,sleep=Util.mapInt( cnfg,"sleep",2000)
@@ -29,11 +48,19 @@ MainTest01(){
 		scan.start();
 	} catch (Exception e) {
 		error(e, "MainTest01.<init>");}
+	checkConfig();
 }
 
-boolean checkConfig(){
-	DB.Prop.tl(). loadProps( null,"","","config",cnfgLog);//Map<String, DB.Prop.SD >v=
-	/*
+void checkConfig(){
+	long last=0
+		,now=System.currentTimeMillis()
+		,trgt=now+cnfgCheckFrequency;
+	while(true)try{
+		now=System.currentTimeMillis();
+		if(now>=trgt){
+			head.vals=DB.Prop.tl(). loadProps( head.vals,"","","",new Date(last));//Map<String, DB.Prop.SD >v=
+			last=now;trgt=now+cnfgCheckFrequency;
+/*
 	reload::
 		asicSleep
 			(net,status,config,info )
@@ -49,12 +76,14 @@ boolean checkConfig(){
 	domain-specific
 
 
-	 */
-	return false;
+	 */		}
+		Thread.sleep(500);
+	}catch(Exception ex){}
 }
 
 String cnfg(String prop,String defVal){
 	//int i=prop.indexOf( '.' );	String c=i==-1?prop:prop.substring( 0,i )		,p=i==-1?prop:prop.substring( i+1 );	Map<String,String>x=cnfg.get( c );
+	Map<String, DB.Prop.SD > cnfg=head==null?null:head.vals.get("");
 	DB.Prop.SD o=cnfg==null?null:cnfg.get( prop );//x!=null?x.get( p ):x;
 	return o==null?defVal:o.s;}
 
@@ -69,12 +98,11 @@ class AsicsScanner  extends Json{
 
 	public void startScan(){
 		for(int ip=ports[0];ip<=ports[1];ip++)try{
-			if(Asic.asics.get( ip )==null){
-				Asic asic=new Asic(prefix,ip);
-				Asic.asics.put(ip,asic);
-				asic.start();
-				//log("AsicsScanner .startScan:",asic);
-				}
+			Asic asic=Asic.asics.get(ip);
+			if(asic==null){
+				Asic.asics.put(ip,asic =new Asic(prefix,ip));
+				asic.start();//log("AsicsScanner .startScan:",asic);
+			}
 		}catch(Exception x){
 			error(x,"AsicsScanner.startScan:",ip);
 			//asics.remove(o)
