@@ -64,8 +64,9 @@ public Map<String,DB.Prop.SD> check(Path p)throws Exception{
 			macs.put( mac,this );
 		}
 		if(ip<=0 || asics.get( ip )==null){
-			ip=Util.parseInt( chngs.get("ipaddress").s,ip);//TODO: might be null, might change
-			asics.put( ip,this );
+			DB.Prop.SD d=  chngs.get("ipaddress");
+			ip=Util.parseInt( d==null?null: d.s,-1);//TODO: might be null, might change
+			if(ip>0)asics.put( ip,this );
 		}String house=global.cnfg("house","258") ;
 		for(String key:chngs.keySet())
 			DB.Prop.save( "",house,mac,p.toString(),key,chngs.get( key ) );//MainTest01.w(mac+'/'+p+'/',new Date(),key,"json",m.get(key));
@@ -107,7 +108,7 @@ public void startMonitor(){
 
 public void run(){
 	try{
-		check(Path.net);
+		check(Path.net);DB.D.close();
 		startMonitor();
 	}catch(java.net.ConnectException ex){
 		//error(ex,"Asic.run:java.net.ConnectException:",base);

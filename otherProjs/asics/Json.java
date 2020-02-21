@@ -39,7 +39,7 @@ import com.mysql.jdbc.jdbc2.optional
 
 public abstract class Json extends Thread{
 static MainTest01 global;
-static MysqlConnectionPoolDataSource pool;
+static MysqlConnectionPoolDataSource pool;static int poolConnCount=0;
 Connection conn;Output jo;DB.Prop prop;DB.Log log;
 Map<Object,Object> m;
 static Json tl(){Thread t=Thread.currentThread();return t instanceof Json?(Json)t:global;}
@@ -736,20 +736,20 @@ public static class DB {
 			//MysqlConnectionPoolDataSource d pool=(MysqlConnectionPoolDataSource)Json.tl(context.pool.str);
 			if(pool!=null){
 				t.conn=pool.getPooledConnection().getConnection();//Json.tl(context.reqCon.str,r);
-				return t.conn;//if(r!=null)
+				countPool(true);return t.conn;//if(r!=null)
 			}
 			else try
 			{int x=0;//context.getContextIndex(t);
 				if(x!=-1)
 				{	t.conn=D.c(x,x,x,x);//t.log("DB.c:1:c2:",p);
-					return t.conn;}
+					countPool(true);return t.conn;}
 			}catch(Throwable e){error(e,"DB.MysqlConnectionPoolDataSource:throwable:");}//ClassNotFoundException
 			if(t.conn==null)try
 			{t.conn=java.sql.DriverManager.getConnection
 				("jdbc:mysql://"+context.server.str
 					 +"/"+context.dbName.str
 					,context.un.str,context.pw.str
-				);//Object[]b={t.conn,null};//Json.tl(context.reqCon.str,b);
+				);countPool(true);//Object[]b={t.conn,null};//Json.tl(context.reqCon.str,b);
 			}catch(Throwable e){error(e,"DB.DriverManager:");}
 			return t.conn;}
 
@@ -780,16 +780,12 @@ public static class DB {
 		/**
 		 * returns a jdbc-PreparedStatement, setting the variable-length-arguments parameters-p, calls dbP()
 		 */
-		public static PreparedStatement p(String sql, Object... p ) throws SQLException {
-			return P( sql, p );
-		}
+		public static PreparedStatement p(String sql, Object... p ) throws SQLException {return P( sql, p );}
 
 		/**
 		 * returns a jdbc-PreparedStatement, setting the values array-parameters-p, calls TL.dbc() and log()
 		 */
-		public static PreparedStatement P( String sql, Object[] p ) throws SQLException {
-			return P( sql, p, true );
-		}
+		public static PreparedStatement P( String sql, Object[] p ) throws SQLException {return P( sql, p, true );}
 
 		public static PreparedStatement P( String sql, Object[] p, boolean odd ) throws SQLException {
 			Connection c = c();//TL t=tl();
@@ -832,7 +828,7 @@ public static class DB {
 			close( r, false );
 		}
 
-		public static void close(){Json t=tl();if(t.conn!=null){try{t.conn.close();}catch(Exception x){}t.conn=null;}}
+		public static void close(){Json t=tl();if(t.conn!=null){try{t.conn.close();countPool(false);}catch(Exception x){}t.conn=null;}}
 		public static void close( ResultSet r, boolean closeC ) {
 			if ( r != null ) try {
 				Statement s = r.getStatement();
@@ -843,6 +839,12 @@ public static class DB {
 			} catch ( Exception e ) {
 				e.printStackTrace();
 			}
+		}
+
+		static void countPool(boolean open){
+			if(logOut)
+				log("poolConnCount=",poolConnCount,",open=",open);
+			poolConnCount+=open?1:-1;
 		}
 
 		/**
@@ -1114,9 +1116,8 @@ public static class DB {
 				r = s.executeUpdate();
 				return r;
 			} finally {
-				s.close();
-				if(logOut)//try{
-					log(Name,".DB.x:sql=",sql,",prms=",p,",return=",r);//}catch(IOException x){}
+				if(s!=null)s.close();
+				//if(logOut)//try{	log(Name,".DB.x:sql=",sql,",prms=",p,",return=",r);//}catch(IOException x){}
 			}
 		}
 
@@ -1846,8 +1847,12 @@ public static class DB {
 
 		@Override public DB.Tbl save() throws Exception {
 			if(log==null)log=new Date();
-			super.save();
-			saveLog();
+			if(pool!=null)synchronized(pool) {
+				super.save();
+				saveLog();
+				DB.D.close();
+			}else
+				log("Prop.save:no pool");
 			return this;
 		}//save
 
@@ -1863,8 +1868,6 @@ public static class DB {
 			m.usr=usr;m.domain=domain;m.mac=mac;m.path=path;m.prop=prop;m.val=d.s;m.log=d.d;
 			m.save();
 		}
-
-		//public static void save( String usr,String domain,String mac,String path,String prop,String val,Date g )throws Exception{ }
 
 		Map<String,Map<String,SD>>loadProps(Map<String,Map<String,SD>>m
 				,String usr,String domain,String mac,Date log){
@@ -1891,7 +1894,7 @@ public static class DB {
 					//String mac=o==null?null:o.toString();if(mac==null)continue;
 					Asic x=isInitMacs?Asic.macs.get( mac):new Asic( mac );
 					boolean exists=x!=null;
-					if(isInitMacs)Asic.macs.put( mac,exists?x:new Asic( mac ) );
+					if(isInitMacs)Asic.macs.put( mac,exists?x:(x=new Asic( mac ) ));
 					else if(!exists)x=new Asic( mac );
 					m.add( x );
 					if(!isInitMacs||!exists)

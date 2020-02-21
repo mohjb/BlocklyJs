@@ -24,13 +24,15 @@ MainTest01(){
 		List<Asic>l=DB.Prop.tl().loadAsicsProps( "",domain,true );//usr="" means current user , domain="" means current domain/house/ headOfCurrentUsr
 		//Asic config=Asic.macs.get( "" );// mac=="" means local/thisHouse/headOfTheHouse
 		//cnfg=config==null?null:config.vals.get( "" );// path=="" ::= configuration / HeadOfTheAsic
-		if(l!=null)for(Asic asic:l){
+		if(l!=null)for(Asic asic:l)try{
 			if(asic.base==null){
-				DB.Prop.SD d=asic.vals.get("net").get("ipaddress");
-				int i=d.s.lastIndexOf('.')
-				,ip=Util.parseInt(d.s.substring(i+1),-1);
-				String s=d.s.substring(0,i+1);
-				asic.init(s,ip);
+				Map<String, DB.Prop.SD> m=asic.vals.get("net");
+				DB.Prop.SD d=m==null?null:m.get("ipaddress");
+				String s=d==null?null:d.s;
+				int i=s==null?-1:s.lastIndexOf('.')
+				,ip=s==null?-1:Util.parseInt(s.substring(i+1),-1);
+				s=s==null?null:s.substring(0,i+1);
+				if(s!=null)asic.init(s,ip);
 			}
 			if(asic.ip>0){
 				Asic.asics.put(asic.ip,asic);
@@ -39,7 +41,8 @@ MainTest01(){
 					asic.mac=d.s;
 					Asic.macs.put(asic.mac,asic);}*/
 				asic.start();}
-		}
+		}catch (Exception e) {
+			error(e, "MainTest01.<init>:for-mac");}
 		String prefix=cnfg("prefix","192.168.8.");//,house=cnfg("house","258");
 		int startPort= cnfg("startPort",2)
 			,endPort= cnfg("endPort",255)//,sleep=Util.mapInt( cnfg,"sleep",2000)
@@ -62,6 +65,11 @@ void checkConfig(){
 			last=now;trgt=now+cnfgCheckFrequency;
 /*
 	reload::
+		domain
+		prefix
+		startPort
+		endPort
+		cnfgCheckFrequency
 		asicSleep
 			(net,status,config,info )
 			(stop , <null>/inherit , <num:milli-seconds>)
