@@ -11,7 +11,7 @@ public static void main(String[]args){
 	try{baseDir=new File("./output/").getCanonicalPath();
 		System.out.println("baseDir="+baseDir);
 		new MainTest01();}catch(Exception e){
-		Json.error(e,"main");}
+		error(e,"main");}
 }//main
 
 MainTest01(){
@@ -86,7 +86,9 @@ void checkConfig(){
 
 	 */		}
 		Thread.sleep(500);
-	}catch(Exception ex){}
+	}catch(Exception x){
+		error(x,"MainTest01.checkConfig");
+	}
 }
 
 String cnfg(String prop,String defVal){

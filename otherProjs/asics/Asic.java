@@ -97,11 +97,11 @@ public void startMonitor(){
 			DB.D.close();
 			Thread.sleep(global.cnfg("sleep",2000));//Util.mapInt( global.cnfg,"sleep",2000));
 		}catch(Exception ex){
+			error(ex,"Asic.startMonitor",base);
 			if(macs.get( mac )==this)
 				macs.remove( mac );
 			if(asics.get( ip )==this)
 				asics.remove( ip );
-			error(ex,"Asic.startMonitor",base);
 			mac=null;
 		}//,ipPrefix,p
 }
@@ -111,7 +111,7 @@ public void run(){
 		check(Path.net);DB.D.close();
 		startMonitor();
 	}catch(java.net.ConnectException ex){
-		//error(ex,"Asic.run:java.net.ConnectException:",base);
+		error(ex,"Asic.run:java.net.ConnectException:",base);
 		asics.remove(ip);
 	}
 	catch(Exception ex){
@@ -203,13 +203,14 @@ public Map<String,DB.Prop.SD>filterChngs( Path p,String asicStr ){
 			if(jo==null)
 				jo=jo().clrSW();
 			s=jo.o(o,"",key).toStrin_();}catch(Exception x){
+			error(x,"Asic.mss");
 		}
 		m.put(key, new DB.Prop.SD(s,now));
 	}
 	return m;}
 
 	static public Map<String,DB.Prop.SD>mss(String p){
-		Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){}
+		Object o=null;try{o=Json.Prsr.parse(p);}catch(Exception x){error(x,"Asic.mss");}
 		Map m=o==null?null:o instanceof Map?(Map)o:Json.Util.mapCreate("",o);
 		return mss(m);}
 

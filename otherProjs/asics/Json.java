@@ -282,7 +282,7 @@ public static class Prsr {
 		lm=l;fz=f.length();
 		try{rdr= new FileReader(f);
 			o=parse();
-		}catch(Exception ex){}
+		}catch(Exception ex){error(ex,"Json.Prsr.load");}
 		return o;}
 
 	/**skip Redundent WhiteSpace*/void skipRWS(){
@@ -419,7 +419,7 @@ public static class Prsr {
 					  ||Character.isDigit(c))bNxt();
 			String s=consume();
 			try{return Long.parseLong(s,16);}
-			catch(Exception ex){}return s;}
+			catch(Exception ex){error(ex,"Json.Prsr.extractDigits");}return s;}
 		}boolean dot=c=='.';
 		bNxt();//if(c=='-'||c=='+'||dot)bNxt();else{c=p.charAt(i);}
 		while(c!='\0'&&Character.isDigit(c))bNxt();
@@ -431,7 +431,7 @@ public static class Prsr {
 		}else if(c=='l'||c=='L'||c=='d'||c=='D'||c=='f'||c=='F')bNxt();
 		String s=consume();//p.substring(i,offset);
 		if(!dot)try{return Long.parseLong(s);}catch(Exception ex){}
-		try{return Double.parseDouble(s);}catch(Exception ex){}return s;}
+		try{return Double.parseDouble(s);}catch(Exception ex){error(ex,"Json.Prsr.extractDigits");}return s;}
 
 	public List<Object> extractArray()throws Exception{
 		if(c!='[')return null;
@@ -828,7 +828,7 @@ public static class DB {
 			close( r, false );
 		}
 
-		public static void close(){Json t=tl();if(t.conn!=null){try{t.conn.close();countPool(false);}catch(Exception x){}t.conn=null;}}
+		public static void close(){Json t=tl();if(t.conn!=null){try{t.conn.close();countPool(false);}catch(Exception x){error(x,"Json.DB.D.close");}t.conn=null;}}
 		public static void close( ResultSet r, boolean closeC ) {
 			if ( r != null ) try {
 				Statement s = r.getStatement();
@@ -836,8 +836,8 @@ public static class DB {
 				r.close();
 				s.close();
 				if ( closeC )close();//{ Json t=tl();t.conn.close();t.conn=null;}
-			} catch ( Exception e ) {
-				e.printStackTrace();
+			} catch ( Exception x ) {
+				error(x,"Json.DB.D.close");//e.printStackTrace();
 			}
 		}
 
@@ -1054,7 +1054,7 @@ public static class DB {
 				T z=(T)t.newInst();
 				z.load(s);
 				r.add(z);
-			}catch(Exception ex){}
+			}catch(Exception x){error(x,"Json.DB.D.qTBl");}
 			return r;}
 		finally{close(s);}}
 
@@ -1262,7 +1262,7 @@ public static class DB {
 					try {
 						return rs == null ? -1 : rs.getInt( ++col );
 					} catch ( SQLException e ) {
-						e.printStackTrace();
+						error(e,"Json.DB.D.ItTbl.ItRow.nextInt");//e.printStackTrace();
 					}
 					return -1;
 				}
@@ -1271,7 +1271,7 @@ public static class DB {
 					try {
 						return rs == null ? null : rs.getString( ++col );
 					} catch ( SQLException e ) {
-						e.printStackTrace();
+						error(e,"Json.DB.D.ItTbl.ItRow.nextStr");//e.printStackTrace();
 					}
 					return null;
 				}
@@ -1304,7 +1304,7 @@ public static class DB {
 				else o.w('}');}
 			return o; }
 
-		public String toJson(Output o){if(o==null);try {jsonOutput(o, "", "");}catch (IOException ex) {}return o.toString();}
+		public String toJson(Output o){if(o==null);try {jsonOutput(o, "", "");}catch (IOException x) {error(x,"Json.DB.Tbl.toJson");}return o.toString();}
 
 
 		public abstract CI[]columns();//public abstract FI[]flds();
