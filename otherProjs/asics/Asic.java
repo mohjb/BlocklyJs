@@ -111,7 +111,7 @@ public void run(){
 		check(Path.net);DB.D.close();
 		startMonitor();
 	}catch(java.net.ConnectException ex){
-		error(ex,"Asic.run:java.net.ConnectException:",base);
+		//error(ex,"Asic.run:java.net.ConnectException:",base);
 		asics.remove(ip);
 	}
 	catch(Exception ex){

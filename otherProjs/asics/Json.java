@@ -474,8 +474,8 @@ public static class Prsr {
 			}//else if(c==','){nxt();
 			if(c!='\0'&&c!=bo){
 				if(c!=',')
-					System.out.print(//throw new IllegalArgumentException(
-						"Object:"+rc()+" expected '"+bc+"' or ','");
+					log(//throw new IllegalArgumentException(
+						"Json.Prsr.extractObject:",rc()," expected '",bc,"' or ',' ; rdr=",rdr==null?null:rdr.toString());
 				nxt();
 				skipWhiteSpace();
 			}
@@ -843,7 +843,7 @@ public static class DB {
 
 		static void countPool(boolean open){
 			if(logOut)
-				log("poolConnCount=",poolConnCount,",open=",open);
+				log("poolConnCount=",poolConnCount,",open=",open," ,ips#=",Asic.asics==null?0:Asic.asics.size());
 			poolConnCount+=open?1:-1;
 		}
 
